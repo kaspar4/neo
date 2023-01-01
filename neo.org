@@ -1,0 +1,17 @@
+#+TITLE: Emacs Configuration
+#+DESCRIPTION: An org-babel based emacs configuration I find useful
+#+LANGUAGE: en
+#+PROPERTY: results silent
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+* Introduction
+This is my personal Emacs configuration. This is not the first time
+I declare [[https://www.emacswiki.org/emacs/DotEmacsBankruptcy][Emacs bankrupcy]] and start over with a new emacs life.
+
+It is not intended to be general or beginner-friendly. If you're a
+beginner you'll probably be better off with one of the many emacs
+configurations with batteries included.
+
+Also, my Emacs stays on for weeks or months at a time; I'm not
+interested in reducing startup time or delaying loading of packages
+until they're first used. It simply doesn't affect me.
