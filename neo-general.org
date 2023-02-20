@@ -1,0 +1,152 @@
+* General Stuff
+
+Here are things that are not worth a file of their own, but are still important enough to have them.
+
+I always want a server running, both for emacsclient and org-capture
+sake.
+
+#+begin_src emacs-lisp
+  (use-package server
+    :config
+    (unless (server-running-p)
+      (server-start)))
+#+end_src
+
+And autoreverting files when they change.
+
+#+begin_src emacs-lisp
+(use-package autorevert
+  :delight
+  :hook (after-init . global-auto-revert-mode))
+#+end_src
+
+** Undo
+Friends don't let friends use Emacs' builtin undo.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package undo-tree
+    :delight undo-tree-mode
+    :chords (("uu" . undo-tree-visualize)) ; the only place this annoys me is when I have to type 'uuid'
+    :init (global-undo-tree-mode)
+    (setq undo-tree-visualizer-diff t)
+    (setq undo-tree-visualizer-timestamps t))
+#+END_SRC
+
+** Native Compilation
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :init
+    (when (boundp 'native-comp-eln-load-path)
+      (add-to-list 'native-comp-eln-load-path (neo/litter-directory "eln" emacs-version)))
+    (setq native-comp-async-report-warnings-errors 'silent))
+#+end_src
+
+  This is for native compilation. Should probably go in
+  ~early-init.org~ once we have it. After I figure out what actually
+  goes inside ~early-init.el~, maybe it is strictly for before-gui
+  things.
+  
+#+begin_src emacs-lisp
+    (if (and (fboundp 'native-comp-available-p)
+             (native-comp-available-p))
+        (progn
+          (message "Native compilation is available")
+          (setq comp-deferred-compilation t)
+          (setq package-native-compile t)
+          (setq native-comp-async-query-on-exit t)
+          (setq native-comp-async-jobs-number 0) ; use half of the cores
+          (setq native-comp-async-report-warnings-errors nil)
+          (setq comp-async-report-warnings-errors nil))
+      (message "Native complation is *not* available"))
+#+end_src
+
+
+** Memory Aids
+There are a few keybindings in Emacs. Some are useful, and you won't
+remember them when needed.
+
+At times one remembers the beginning of a keybinding. ~which-key~ comes
+to the rescue and after a short delay shows all possible ways to
+extend that prefix. Not as precise as curated hydras, but has the big
+advantage of applying to all key bindings without further
+configuration.
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :init (which-key-mode)
+  :delight which-key-mode
+  :config
+  (setq which-key-idle-delay 0.3))
+#+END_SRC
+
+And remember the
+~describe-personal-keybindings~
+(~~<f2> k~~) that comes with ~use-package~.
+
+** Global Keybindings
+
+#+BEGIN_SRC emacs-lisp
+  (use-package key-chord
+    :config
+    (key-chord-define-global "``"     'toggle-menu-bar-mode-from-frame)
+    (key-chord-define-global ".."     'comment-or-uncomment-region)
+    (key-chord-define-global ",,"     'sort-lines)
+    (key-chord-define-global "//"     'align-regexp))
+#+END_SRC
+
+** Secrets
+
+#+begin_src emacs-lisp
+  (use-package auth-source
+    :custom
+    (auth-sources '((:source "~/.authinfo.gpg")))
+    (auth-source-cache-expiry (* 24 60 60)))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp :tangle no
+;  (use-package epa-file 
+;    :config
+;    (epa-file-enable))
+#+END_SRC
+
+** Misc
+#+begin_src emacs-lisp
+  (use-package helpful
+    :custom
+    (counsel-describe-function-function #'helpful-callable)
+    (counsel-describe-variable-function #'helpful-variable))
+    ;; :bind
+    ;; ([remap describe-function] . counsel-describe-function)
+    ;; ([remap describe-command] . helpful-command)
+    ;; ([remap describe-variable] . counsel-describe-variable)
+    ;; ([remap describe-key] . helpful-key))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package autorevert
+  :delight
+  :hook (after-init . global-auto-revert-mode))
+#+end_src
+
+
+#+begin_src emacs-lisp
+  (use-package async
+  :config
+  ; don't ask for confirmation, it is annoying.
+
+  (setq async-shell-command-buffer 'new-buffer))
+#+end_src
+
+#+begin_src emacs-lisp
+    (use-package auto-sudoedit
+      :config
+      (auto-sudoedit-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package emacs
+  :init
+  (if (fboundp 'pixel-scroll-precision-mode)
+    (pixel-scroll-precision-mode 1)))
+#+end_src

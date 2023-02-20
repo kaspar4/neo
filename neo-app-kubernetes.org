@@ -1,0 +1,13 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-app-kubernetes.org")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package kubernetes
+    :commands (kubernetes-overview))
+
+    ;; :config
+    ;; (setq kubernetes-poll-frequency 3600
+    ;; 	kubernetes-redraw-frequency 3600))
+
+#+END_SRC

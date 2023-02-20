@@ -1,0 +1,36 @@
+Look at more vterm/zsh configuration at
+https://github.com/akermu/emacs-libvterm#fonts
+
+Also https://github.com/suonlight/multi-vterm
+
+#+BEGIN_SRC emacs-lisp
+  ;;; should be installed where we do package stuff
+  (use-package use-package-ensure-system-package
+  :ensure t)
+
+  (use-package vterm
+    :ensure-system-package cmake
+    :ensure-system-package libtool-bin
+    :custom
+    (vterm-max-scrollback 10000)
+    (vterm-shell "zsh")
+    :config
+    (defun turn-off-chrome ()
+      (hl-line-mode -1)
+      (display-line-numbers-mode -1))
+    :hook (vterm-mode . turn-off-chrome))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package vterm-toggle
+    :custom
+    (vterm-toggle-fullscreen-p t)
+    (vterm-toggle-scope 'project)
+    :bind (("s-t" . #'vterm-toggle)
+           :map vterm-mode-map
+           ("s-t" . #'vterm-toggle)))
+#+END_SRC
+
+#+begin_src emacs-lisp
+(use-package eshell-vterm)
+#+end_src

@@ -1,0 +1,54 @@
+* Project Management
+
+I don't like these keybindings.
+Also, somewhere else I alredy do a magit status command.
+
+#+begin_src emacs-lisp
+  (use-package project
+  :pin gnu
+  :bind (("C-c k" . #'project-kill-buffers)
+         ("C-c m" . #'project-compile)
+         ("C-x f" . #'find-file)
+         ("C-c f" . #'project-find-file)
+         ("C-c F" . #'project-switch-project))
+  :custom
+  ;; This is one of my favorite things: you can customize
+  ;; the options shown upon switching projects.
+  (project-switch-commands
+   '((project-find-file "Find file")
+     (magit-project-status "Magit" ?g)
+     (deadgrep "Grep" ?h)))
+  (compilation-always-kill t)
+  (project-vc-merge-submodules nil))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package persp-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package persp-mode-project-bridge
+  :hook
+  (persp-mode-project-bridge-mode . (lambda ()
+                                      (if persp-mode-project-bridge-mode
+                                          (persp-mode-project-bridge-find-perspectives-for-all-buffers)
+                                        (persp-mode-project-bridge-kill-perspectives))))
+  (persp-mode . persp-mode-project-bridge-mode))
+#+end_src
+** TODO might be nice to have a project dashboard
+This could show the magit status and all the todo items (there's a
+magit todo package, maybe the dashboard is just an extended magit
+status page.
+
+** TODO on the magit status, allow to switch to the project perspective
+I don't know if I'll use perspective, but whatever keeps the state of
+the desktop.
+
+#+begin_src sh
+  (setq dispatch-files "~/mlody/docs/dispatches")
+
+  (org-ql-query
+  :select 'element
+  :from '("~/mlody/docs/dispatches/d1.org" "~/mlody/docs/dispatches/d2.org")
+  :where '(todo "TODO"))
+#+end_src

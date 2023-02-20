@@ -15,3 +15,44 @@ configurations with batteries included.
 Also, my Emacs stays on for weeks or months at a time; I'm not
 interested in reducing startup time or delaying loading of packages
 until they're first used. It simply doesn't affect me.
+
+* Modules
+I keep my configuration in separate org-mode files. It would be
+posible to work with a single file (and this is what I actually did
+before I wrote code to tangle files containing include directives). I
+find that a single file is more prone to increase the entropy of the
+universe.
+
+~neo-init.org~ is a bit special, it is ~#+INCLUDEd~ here so that it is
+exported to HTML when I publish this Emacs configuration, but is not
+really included.  I mean, it is, but since it doesn't contain any
+elisp blocks, it is a no-op
+#+INCLUDE: "~/neo/neo-init.org"
+
+#+begin_src emacs-lisp
+;; -*- coding: utf-8; lexical-binding: t -*-
+#+end_src
+
+#+INCLUDE: "~/neo/neo-core.org"
+#+INCLUDE: "~/neo/neo-packages.org"
+#+INCLUDE: "~/neo/neo-reasonable-defaults.org"
+#+INCLUDE: "~/neo/neo-general.org"
+#+INCLUDE: "~/neo/neo-restart.org"
+#+INCLUDE: "~/neo/neo-litter.org"
+#+INCLUDE: "~/neo/neo-completion.org"
+#+INCLUDE: "~/neo/neo-git.org"
+#+INCLUDE: "~/neo/neo-ui.org"
+#+INCLUDE: "~/neo/neo-snippets.org"
+#+INCLUDE: "~/neo/neo-org.org"
+#+INCLUDE: "~/neo/neo-orgroam.org"
+#+INCLUDE: "~/neo/neo-latex.org"
+##INCLUDE: "neo-project.org"
+#+INCLUDE: "~/neo/neo-software-development.org"
+#+INCLUDE: "~/neo/neo-fun.org"
+
+#+INCLUDE: "~/neo/neo-app-dashboard.org"
+#+INCLUDE: "~/neo/neo-app-shell.org"
+##INCLUDE: "~/neo/neo-app-kubernetes.org"
+
+#+INCLUDE: "~/neo/neo-tosort.org"
+#+INCLUDE: "~/neo/neo-todo.org"

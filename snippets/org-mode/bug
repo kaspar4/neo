@@ -1,0 +1,29 @@
+# -*- mode: snippet -*-
+# name: bug
+# key: bug
+# --
+:PROPERTIES:
+Severity: ${2:$$(yas-choose-value '("blocker" "critical" "major" "minor" "trivial"))}
+Priority: ${3:$$(yas-choose-value '("high" "medium" "minor"))}
+:END:
+
+#+title: ${1:A Useful Summary}
+#+date: `(current-time-string)`
+#+author: `(user-full-name)`
+
+* Description
+  /A complete description of the problem, when the title doesn't suffice/
+  
+* Environment
+  /Where the bug was observed, project, commit SHA, any additional data required to reproduce/
+  
+* Steps to reproduce
+  /A (possibly cut-and-paste) sequence of steps to reproduce the problem, using no more than the information in the Environment section/
+
+* Expected result
+  /What the user expected to see or achieve/
+  
+* Actual result
+  /What the user actually sees/
+  
+* Attachments 

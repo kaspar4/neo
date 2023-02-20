@@ -1,0 +1,131 @@
+* Software Development
+
+** Languages
+#+INCLUDE: "neo-lang-go.org"
+#+INCLUDE: "neo-lang-elisp.org"
+#+INCLUDE: "neo-lang-misc.org"
+
+** Tree sitter
+
+Run ~batch.sh~ in ~https://github.com/casouri/tree-sitter-module~.
+copy all files produced in the ~build~ directory into
+~(no-littering-expand-var-file-name "tree-sitter")~ [ for me
+~HOME/neo-save.d/data/tree-sitter~)
+
+#+begin_src emacs-lisp
+  (use-package treesit
+    :ensure nil
+    :disabled (version< emacs-version "29.0")
+    :config
+    (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter")))
+    (push '(css-mode . css-ts-mode) major-mode-remap-alist)
+    (push '(python-mode . python-ts-mode) major-mode-remap-alist)
+    (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
+    (push '(js-json-mode . json-ts-mode) major-mode-remap-alist)
+    (push '(typescript-mode . typescript-ts-mode) major-mode-remap-alist)
+    (push '(c-mode . c-ts-mode) major-mode-remap-alist)
+    (push '(go-mode . go-ts-mode) major-mode-remap-alist)
+    (push '(c++-mode . c++-ts-mode) major-mode-remap-alist)
+    )
+
+#+end_src
+This is wrong, shouldn't require things that are use-packaged.
+#+begin_src emacs-lisp
+  ;; (use-package tree-sitter
+  ;;  ;; :straight (tree-sitter :host github :repo "ubolonton/emacs-tree-sitter" :depth full)
+  ;;   :after (tree-sitter-langs)
+  ;;   :diminish
+  ;;   :custom
+  ;;   (font-lock-maximum-decoration t)
+  ;;   :config
+  ;;   (global-tree-sitter-mode)
+  ;;   :hook (python-mode . (lambda ()
+  ;;                          (require 'tree-sitter)
+  ;;                          (require 'tree-sitter-langs)
+  ;;                          (require 'tree-sitter-hl)
+  ;;                          (tree-sitter-hl-mode)
+  ;;                          )))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package tree-sitter-ispell)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package tree-sitter-langs)
+#+end_src
+
+(use-package tree-sitter-langs)
+(use-package tree-sitter
+  :diminish
+  :after (tree-sitter-langs)
+  ;; TODO: check out themes, likely in modus-themes
+  ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/blob/master/doc/emacs-tree-sitter.org#theming
+  :hook
+  (tree-sitter-after-on . tree-sitter-hl-mode)
+  :custom
+  (font-lock-maximum-decoration t)
+  :config
+  (when-let ((language-name (alist-get 'ruby-mode
+                                       tree-sitter-major-mode-language-alist)))
+    (add-to-list 'tree-sitter-major-mode-language-alist
+                 (cons 'enh-ruby-mode language-name)))
+  (global-tree-sitter-mode))
+)
+** Language Server Protocol
+#+begin_src emacs-lisp
+(use-package eglot)
+
+(setq completion-category-overrides '((eglot (styles orderless))))
+(setq-default eglot-workspace-configuration
+    '((:gopls .
+        ((staticcheck . t)
+         (matcher . "CaseSensitive")))))
+
+;; eglot-organize-imports is hopefully a temporary stopgap until
+;; https://github.com/joaotavora/eglot/issues/574 is addressed.
+(defun eglot-organize-imports ()
+  "Offer to execute the source.organizeImports code action."
+  (interactive)
+  (unless (eglot--server-capable :codeActionProvider)
+    (eglot--error "Server can't execute code actions!"))
+  (let* ((server (eglot--current-server-or-lose))
+         (actions (jsonrpc-request
+                   server
+                   :textDocument/codeAction
+                   (list :textDocument (eglot--TextDocumentIdentifier))))
+         (action (cl-find-if
+                  (jsonrpc-lambda (&key kind &allow-other-keys)
+                    (string-equal kind "source.organizeImports" ))
+                  actions)))
+    (when action
+      (eglot--dcase action
+        (((Command) command arguments)
+          (eglot-execute-command server (intern command) arguments))
+        (((CodeAction) edit command)
+          (when edit (eglot--apply-workspace-edit edit))
+          (when command
+            (eglot--dbind ((Command) command arguments) command
+              (eglot-execute-command server (intern command) arguments))))))))
+
+(defun eglot-organize-imports-on-save ()
+  (defun eglot-organize-imports-nosignal ()
+    "Run eglot-organize-imports, but demote errors to messages."
+    ;; Demote errors to work around
+    ;; https://github.com/joaotavora/eglot/issues/411#issuecomment-749305401
+    ;; so that we do not prevent subsequent save hooks from running
+    ;; if we encounter a spurious error.
+    (with-demoted-errors "Error: %s" (eglot-organize-imports)))
+  (add-hook 'before-save-hook #'eglot-organize-imports-on-save))
+
+(add-hook 'go-mode-hook #'eglot-organize-imports-on-save)
+
+#+end_src
+
+** Build
+#+begin_src emacs-lisp
+(use-package bazel)
+#+end_src
+
+
+

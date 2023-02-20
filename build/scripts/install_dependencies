@@ -1,0 +1,91 @@
+#!/bin/bash
+
+DEBIAN_VERSION=${1:-$(lsb_release --codename --short)}
+
+if [[ $# -gt 1 ]]; then
+    echo "Usage: install_dependencies [DEBIAN_DISTRIBUTION]a"
+    exit 1
+fi
+
+if [[ ${DEBIAN_VERSION} == "buster" ]]; then
+    GCC_VERSION=8
+elif [[ ${DEBIAN_VERSION} == "bullseye" ]]; then
+    GCC_VERSION=10
+elif [[ ${DEBIAN_VERSION} == "vanessa" ]]; then
+    GCC_VERSION=12
+elif [[ ${DEBIAN_VERSION} == "vera" ]]; then
+    GCC_VERSION=12
+else
+    echo "Invalid debian distribution"
+    exit 1
+fi
+      
+APT_BUILD_PACKAGES=$(cat <<EOF
+  autoconf 
+  automake 
+  autotools-dev 
+  build-essential 
+  ca-certificates 
+  cmake
+  curl 
+  dpkg-dev 
+  gcc-${GCC_VERSION} g++-${GCC_VERSION}
+  git 
+  gnupg 
+  imagemagick 
+  ispell 
+  libacl1-dev 
+  libasound2-dev 
+  libcanberra-gtk3-module 
+  libdbus-1-dev 
+  libgccjit-${GCC_VERSION}-dev
+  libgccjit0
+  libgif-dev 
+  libgnutls28-dev 
+  libgpm-dev 
+  libgtk-3-dev 
+  libharfbuzz-dev
+  libjansson-dev
+  libjansson4
+  libjpeg-dev
+  libjpeg-dev 
+  liblockfile-dev 
+  libm17n-dev 
+  libmagick++-6.q16-dev 
+  libncurses5-dev
+  libotf-dev 
+  libpng-dev
+  librsvg2-dev 
+  libselinux1-dev 
+  libtiff-dev 
+  libtool
+  libtool-bin
+  libx11-dev
+  libxaw7-dev 
+  libxml2-dev 
+  libxpm-dev
+  openssh-client 
+  python3 
+  texinfo 
+  wget 
+  xaw3dg-dev 
+  zlib1g-dev 
+EOF
+)
+
+export DEBIAN_FRONTEND=noninteractive
+
+sudo apt-get -qq update
+
+# One shouldn't have to go this far to have a quiet install
+# Unfortunately -qq is not enough as lot of crap comes from dpcg itself
+# here we make sure isatty respond false. And all of this is still not enough
+sudo apt-get -qq install -o=Dpkg::Use-Pty=0 --no-install-recommends -y ${APT_BUILD_PACKAGES}
+
+# In kubernetes it would be kubepod or something
+# I don't plan to run this in kubernetes, but caveat emptor
+if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+    # in docker we cleanup after us
+    rm -rf /var/lib/apt/lists/*
+fi
+

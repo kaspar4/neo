@@ -1,0 +1,13 @@
+#!/bin/bash
+
+EMACS_VERSION=${1:-master}
+
+docker run  \
+-p 1234:1234  \
+--volume /dev/pts:/dev/pts  \
+-v /tmp/.X11-unix:/tmp/.X11-unix  \
+--privileged --ipc host --rm --name emacs \
+-e DISPLAY=$DISPLAY  \
+-e UID="1000" -e GID="1000"  \
+-v /home/mav:/home/mav \
+emacs:${EMACS_VERSION} /usr/local/bin/emacs --with-profile neo

@@ -1,0 +1,44 @@
+#+BEGIN_SRC emacs-lisp
+      (neo/enter-include "neo-reasonable-defaults.org")
+#+END_SRC
+
+* Reasonable Defaults
+
+Speaking only for myself, claro?
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :config
+    (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+    (setq message-log-max 10000) ; I cannot have t as my Emacs stays on forever
+    (setq kill-whole-line t)
+    (setq visible-bell 1)
+    (setq initial-scratch-message "")
+    (setq inhibit-splash-screen t)
+    (setq inhibit-startup-screen t)
+    (setq inhibit-startup-buffer-menu t)
+    (setq use-dialog-box nil)
+    (setq ring-bell-function 'ignore)
+    (setq-default truncate-lines t)
+    (setq-default indent-tabs-mode nil)
+    (setq custom-safe-themes t) ; not sure, I'll probaby use very few themes no need to trust 'em all
+    (setq scroll-conservatively 10000)    ; not sure abut this one
+    (setq scroll-preserve-screen-position t)
+    (put 'narrow-to-region 'disabled nil)
+    (tool-bar-mode -1)
+    (toggle-scroll-bar -1)
+    (toggle-menu-bar-mode-from-frame -1)
+    (tooltip-mode -1)
+    (blink-cursor-mode 0)
+    (set-fringe-mode '(10 . 0))
+    (fset 'yes-or-no-p 'y-or-n-p)
+    ;; The following is mainly for avoiding the
+    ;; 'Symbolic link to Git-controlled source file; follow link? (y or n)'
+    ;; question every time I get to a package source via find-library or
+    ;; find-function. The question could be avoided with
+    ;; (setq vc-follow-symlinks t)
+    ;; but since we don't use VC at all, I take the nuclear option.
+    (setq vc-handled-backends nil))
+#+end_src
+
+

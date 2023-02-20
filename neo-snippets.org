@@ -1,0 +1,34 @@
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :init
+    (yas-global-mode t)
+    (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets"))
+    )
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package yasnippet-snippets)
+#+end_src
+
+~yas-describe-tables~ gives you a summary of what's available.
+
+#+begin_src emacs-lisp
+  (defun neo/expand-snippet-in-buffer (snippet major-mode buffer)
+  )
+
+  (defun neo/expand-snippet (snippet)
+      (unwind-protect
+          (let ((buffer (get-buffer-create "*temp-snippet*"))
+                (snippet-body (yas-lookup-snippet snippet 'org-mode)))
+              (set-buffer buffer)
+              (erase-buffer)
+              (yas-minor-mode)
+              (yas-expand-snippet snippet-body)
+              (org-mode)
+              )))
+#+end_src
+
+#+begin_src emacs-lisp
+  
+  (add-hook 'emacs-startup-hook (lambda () (yas-load-directory "/home/mav/neo/snippets")))
+#+end_src

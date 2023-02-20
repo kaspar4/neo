@@ -1,0 +1,311 @@
+#!/bin/bash
+# Ehi Emacs, this is -*- shell-script -*-
+
+set +x
+
+validate_build_type() {
+    build_type=$1
+    if [[ ${build_type} != "local" && ${build_type} != "docker" ]]; then
+        echo "Invalid build type '${build_type}' [expected local or docker]"
+        exit 2
+    fi
+}
+
+validate_emacs_version() {
+    emacs_version=$1
+}
+
+is_release_candidate() {
+    emacs_version=$1
+    IFS='-' read -ra version_parts <<< "$emacs_version"
+    if [[ ${version_parts[1]} != "" && ${version_parts[0]} =~ "^[0-9]+$" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+is_release() {
+    emacs_version=$1
+    rx='^[0-9]+\.[0-9]+$'
+    if [[ $emacs_version =~ $rx ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+running_in_container() {
+    # In kubernetes it would be kubepod or something
+    # I don't plan to run this in kubernetes, but caveat emptor
+    if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+source_dir() {
+    if running_in_container; then
+        source_dir="/emacs"
+    else
+        if is_release ${emacs_version} || is_release_candidate ${emacs_version}; then
+            source_dir="${SOURCE_CACHE}/${emacs_version}"
+        else
+            source_dir="${SOURCE_CACHE}/repo"
+        fi
+    fi
+    echo ${source_dir}
+}
+
+ensure_source_dir() {
+    dir=$(source_dir)
+    sudo  mkdir -p ${dir}
+    sudo chown ${USER} ${dir}
+}
+
+download_tar() {
+    tar_base_url=$1
+    emacs_version=$2
+    tar_filename=emacs-${EMACS_VERSION}.tar.xz
+    # topdir is $(basename ${dir})
+    if running_in_container; then
+        topdir="/emacs"
+    else
+        topdir="${emacs_version}"
+    fi
+    emacs_final_version=${emacs_version%-rc*}
+    ensure_source_dir
+    dir=$(source_dir)
+#    if [ ! -d ${dir} ]; then
+        echo "Sources in ${SOURCE_CACHE}/${emacs_version}"
+        echo "Emacs final version: ${emacs_final_version}"
+        echo "Topdir: ${topdir}"
+        echo "source cache: $(dirname ${topdir})"
+        echo "tar: tar xJ -f - -C ${dir} --transform s,emacs-${emacs_final_version},${topdir},"
+        wget --progress=bar:force:noscroll -qO- ${tar_base_url}/${tar_filename} | tar xJ -f - -C $(dirname ${dir}) --transform s,emacs-${emacs_final_version},${topdir},
+        # add error check and exit cleanly. Is a pipeline, both processes may fail
+        ls -l ${dir}/*
+        echo "Done tar"
+#    fi
+}
+
+ensure_git_repository() (
+    emacs_version=$1
+    if [[ -d ${SOURCE_CACHE}/repo ]]; then
+        cd ${SOURCE_CACHE}/repo
+        if [[ ${emacs_version} == "master" ]]; then
+            limit=""
+        else
+            limit="--unshallow"
+        fi
+        git fetch ${limit}
+        git clean -fx
+    else
+        sudo mkdir -p ${SOURCE_CACHE}/repo
+        sudo chown ${USER} ${SOURCE_CACHE}/repo
+        if [[ ${emacs_version} == "master" ]]; then
+            git clone --depth 1 -b master git://git.sv.gnu.org/emacs.git ${SOURCE_CACHE}/repo
+        else
+            git clone https://github.com/emacs-mirror/emacs.git ${SOURCE_CACHE}/repo
+        fi
+    fi
+
+    git checkout ${emacs_version}
+)
+
+download_source() {
+    emacs_version=$1
+    if is_release ${emacs_version}; then
+        download_tar "http://mirror.rit.edu/gnu/emacs" ${emacs_version}
+    elif is_release_candidate ${emacs_version}; then
+        download_tar "https://alpha.gnu.org/gnu/emacs/pretest" ${emacs_version}
+    else
+        # we assume it is a git commit
+        ensure_git_repository ${emacs_version}
+    fi
+}
+
+build_dist() (
+    emacs_version=$1
+
+    dir=$(source_dir)
+    ls $(source_dir)
+    
+    (
+        cd ${dir};
+        echo "=="
+        pwd
+        ls -lR
+        echo "=="
+        if [[ ! -f configure ]]; then
+            ./autogen.sh
+        fi
+    )
+
+    if [[ -d ${BUILD_DIR} ]]; then
+        sudo rm -rf ${BUILD_DIR}
+    fi
+    sudo mkdir -p ${BUILD_DIR}
+    sudo chown ${USER} ${BUILD_DIR}
+
+    if [[ ${NATIVE_COMPILATION} == "yes" ]]; then
+        native_compilation="--with-native-compilation"
+        suffix="-native"
+    else
+        native_compilation=""
+        suffix=""
+    fi
+    target_dir=${DIST_DIR}/${emacs_version}${suffix}
+    cd ${build_dir}
+
+    sudo mkdir -p ${DIST_DIR}
+    sudo chown ${USER} ${DIST_DIR}
+
+    CC=gcc-12 ${dir}/configure --prefix ${target_dir} ${native_compilation}
+    make --jobs $(nproc) bootstrap
+    make --jobs $(nproc)
+    make install
+)
+
+install_dependencies() {
+    debian_version=$1
+    echo $debian_version
+    if [[ ${debian_version} == "buster" ]]; then
+        gcc_version=8
+    elif [[ ${debian_version} == "bullseye" ]]; then
+        gcc_version=10
+    elif [[ ${debian_version} == "vanessa" ]]; then
+        gcc_version=12
+    else
+        echo "Invalid debian distribution"
+        exit 1
+    fi
+
+    APT_BUILD_PACKAGES=$(cat <<EOF
+  autoconf 
+  automake 
+  autotools-dev 
+  build-essential 
+  ca-certificates 
+  curl 
+  dpkg-dev 
+  gcc-${gcc_version} g++-${gcc_version}
+  git 
+  gnupg 
+  imagemagick 
+  ispell 
+  libacl1-dev 
+  libasound2-dev 
+  libcanberra-gtk3-module 
+  libdbus-1-dev 
+  libgccjit-${gcc_version}-dev
+  libgccjit0
+  libgif-dev 
+  libgnutls28-dev 
+  libgpm-dev 
+  libgtk-3-dev 
+  libharfbuzz-dev
+  libjansson-dev
+  libjansson4
+  libjpeg-dev
+  libjpeg-dev 
+  liblockfile-dev 
+  libm17n-dev 
+  libmagick++-6.q16-dev 
+  libncurses5-dev
+  libotf-dev 
+  libpng-dev
+  librsvg2-dev 
+  libselinux1-dev 
+  libtiff-dev 
+  libx11-dev
+  libxaw7-dev 
+  libxml2-dev 
+  libxpm-dev
+  openssh-client 
+  python3
+  tar
+  texinfo 
+  wget 
+  xaw3dg-dev 
+  zlib1g-dev 
+EOF
+)
+   export DEBIAN_FRONTEND=noninteractive
+
+   sudo DEBIAN_FRONTEND=noninteractive apt-get -qq update
+
+   MISSING=$(dpkg --get-selections $APT_BUILD_PACKAGES 2>&1 | grep -v 'install$' | awk '{ print $6 }')
+#   echo  "MISSING: ${MISSING}"
+   
+   # One shouldn't have to go this far to have a quiet install
+   # Unfortunately -qq is not enough as lot of crap comes from dpcg itself
+   # here we make sure isatty respond false. And all of this is still not enough
+   sudo apt-get -qq install -o=Dpkg::Use-Pty=0 --no-install-recommends -y ${APT_BUILD_PACKAGES} > /dev/null 2>&1
+
+   if running_in_container; then
+       rm -rf /var/lib/apt/lists/*
+   fi
+}
+
+PARSED_OPTIONS=$(getopt -o nb:v:c:d: --long dependencies-only:,native-compilation,build:,version:,source-cache-dir:,dist-dir: \
+              -n 'ebuild' -- "$@")
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "${PARSED_OPTIONS}"
+
+BUILD_TYPE=local
+EMACS_VERSION=28.2
+SOURCE_CACHE=/usr/local/emacs/sources
+DIST_DIR=/usr/local/emacs/dist
+BUILD_DIR=/usr/local/emacs/build
+NATIVE_COMPILATION=no
+DEBIAN_VERSION=$(lsb_release --codename --short)
+DEPENDENCIES_ONLY=no
+
+while true; do
+    case "$1" in
+        --dependencies-only) DEPENDENCIES_ONLY="$2"; shift 2;;
+        -n | --native-compilation) NATIVE_COMPILATION=yes; shift;;
+        -b | --build ) BUILD_TYPE="$2"; shift 2 ;;
+        -v | --version ) EMACS_VERSION="$2"; shift 2;;
+        -c | --source-cache-dir ) SOURCE_CACHE="$2"; shift 2;;
+        -d | --dist-dir ) DIST_DIR="$2"; shift 2;;
+        -- ) shift; break ;;
+        * ) break ;;
+  esac
+done
+
+validate_build_type ${BUILD_TYPE}
+validate_emacs_version ${EMACS_VERSION}
+
+echo ${DEPENDENCIES_ONLY}
+if [[ ${DEPENDENCIES_ONLY} != "no" ]]; then
+    install_dependencies ${DEPENDENCIES_ONLY}
+    exit 0
+fi
+
+echo "Build type:    ${BUILD_TYPE}"
+echo "Emacs version: ${EMACS_VERSION}"
+echo "Source cache:  ${SOURCE_CACHE}"
+echo "Dist dir:      ${DIST_DIR}"
+echo "Build dir:     ${BUILD_DIR}"
+echo "Native comp:   ${NATIVE_COMPILATION}"
+
+if [[ ${BUILD_TYPE} == "docker" ]]; then
+    echo "Build docker image"
+    BASE_IMAGE=debian:bullseye                  \
+    DEBIAN_VERSION=${DEBIAN_VERSION}            \
+    EMACS_VERSION=${EMACS_VERSION}              \
+    NATIVE_COMPILATION=${NATIVE_COMPILATION}    \
+    USER=${USER}                                \
+    UID=${UID}                                  \
+    GID=${GID}                                  \
+    envsubst < Dockerfile | DOCKER_BUILDKIT=1 docker build -t emacs:${EMACS_VERSION} -f - .
+else
+   install_dependencies ${DEBIAN_VERSION}
+   download_source ${EMACS_VERSION}
+   build_dist ${EMACS_VERSION}
+fi

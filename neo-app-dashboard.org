@@ -1,0 +1,51 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-app-dashboard.org")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package uptimes
+    :config
+    (setq uptimes-database (concat (neo/litter-directory "uptimes") "uptimes.el")))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+    (use-package fortune
+      :ensure-system-package fortune
+      )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+    (use-package dashboard-hackernews)
+#+END_SRC
+
+# <a
+# href="https://www.freepik.com/free-vector/paper-with-doodle-design-space_24467712.htm#query=kids%20drawings&position=48&from_view=keyword&track=ais">Image
+# by brgfx</a> on Freepik
+
+#+begin_src emacs-lisp
+  (use-package dashboard
+    :after dashboard-hackernews
+    :delight (dashboard-mode page-break-lines-mode)
+    :config
+    (if (file-readable-p "~/neo/assets/hacker.png")
+        (progn
+          (setq dashboard-startup-banner "~/neo/assets/hacker.png")
+          (setq dashboard-banner-logo-title "W   E      A   R   E      L   E   G   I   O   N   S")
+          (set-face-attribute 'dashboard-banner-logo-title nil :font "Orbitron" :height 200 :weight 'bold :foreground "#196DB5"))
+      (setq dashboard-startup-banner 'logo)
+      (setq dashboard-banner-logo-title "Welcome to Emacs Neo"))
+    (setq dashboard-items
+          '((recent . 5)
+            (agenda . 10)
+            (hackernews . 5)))
+   (setq initial-buffer-choice #'(lambda () (get-buffer-create "*dashboard*")))
+    (dashboard-setup-startup-hook)
+    :hook (
+           (after-init     . dashboard-refresh-buffer)
+           (dashboard-mode-hook . (lambda () (message "HOOK") (setq cursor-type nil))))
+    )
+    ;; :custom
+    ;;  (initial-buffer-choice #'(lambda () (get-buffer-create "*dashboard*"))))
+#+END_SRC
+
+

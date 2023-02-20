@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: incompatible
+# key: incompatible
+# --
+
+These come from the Bazel github issues for incompatible flags
+
+* Background
+
+* Problem
+
+* Migration
+
+* Expected Timeline

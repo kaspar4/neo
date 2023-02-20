@@ -1,0 +1,62 @@
+#!/bin/bash
+
+EMACS_VERSION=${1:-27.2}
+NATIVE=${2}
+
+if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+    SOURCE_DIR="/emacs"
+    BUILD_DIR="/build"
+else
+    SOURCE_DIR="/usr/local/emacs/sources/${EMACS_VERSION}"
+    BUILD_DIR="/usr/local/emacs/build/${EMACS_VERSION}"
+fi
+
+if [[ ${EMACS_VERSION} == "master" ]]; then
+    # difficult and annoying to use
+    BUILD_SUFFIX="-$(cd ${SOURCE_DIR}; git rev-parse HEAD | cut -c 1-8)"
+else
+    BUILD_SUFFIX=""
+fi
+BUILD_SUFFIX=""
+
+if [[ ${NATIVE} == "native" ]]; then
+    NATIVE="--with-native-compilation"
+fi
+
+if [[ ${NATIVE} == "--with-native-compilation" ]]; then
+    BUILD_SUFFIX="${BUILD_SUFFIX}-native"
+fi
+
+if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+    TARGET_DIR="/usr/local"
+else
+    TARGET_DIR="/usr/local/emacs/dist/${EMACS_VERSION}${BUILD_SUFFIX}"
+fi
+
+echo "Source dir: " $SOURCE_DIR
+echo "Build dir: " $BUILD_DIR
+echo "Config: " $EMACS_CONFIG
+echo "Suffix: |$BUILD_SUFFIX|"
+
+
+cd ${SOURCE_DIR}
+./autogen.sh
+
+sudo mkdir -p ${BUILD_DIR}
+sudo chown ${USER} ${BUILD_DIR}
+cd ${BUILD_DIR}
+CC=gcc-12 ${SOURCE_DIR}/configure --with-libxml2 --with-json --prefix ${TARGET_DIR} ${NATIVE}
+
+make --jobs $(nproc) bootstrap
+make --jobs $(nproc)
+sudo make install
+
+# cleanup. For master we leave the repository around but undo
+# the effects of configuration
+if [[ ${EMACS_VERSION} == "master" ]]; then
+    cd ${SOURCE_DIR}
+    git clean -f -x
+fi
+sudo rm -rf ${BUILD_DIR}
+
+

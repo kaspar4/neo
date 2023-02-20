@@ -1,0 +1,106 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-ui.org")
+#+END_SRC
+
+Maybe this should be in general
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :init
+  (global-set-key (kbd "C-=") 'text-scale-increase)
+  (global-set-key (kbd "C--") 'text-scale-decrease)
+  )
+#+end_src
+
+* Dimming
+TODO dimmer-fraction need to be dependent on the theme: lighter themes
+need larger numbers. The default, 0.2 is ok for dark themes
+
+Popup buffers are not ideal either. Things like *Apropos*, I'd like them
+not to be dimmed when they pop up, but they should be dimmed when one
+goes away from them. Maybe the right behavior is not to exclude them,
+having them selected with a 'q' binding for burying them.
+
+Autocompletion is also not perfect. It shouldn't dim the buffer we're
+completing from. Too distracting. Maybe the exclusion predicate would
+work for this.
+
+#+begin_src emacs-lisp
+   (use-package dimmer
+     :custom
+     (dimmer-fraction 0.5)
+     :config
+     (add-to-list 'dimmer-buffer-exclusion-regexps "^\\*Warnings\\*$")
+     (add-to-list 'dimmer-buffer-exclusion-regexps "^\\*Apropos\\*$")
+     (add-to-list 'dimmer-buffer-exclusion-regexps "^\\*Help\\*$")
+     (dimmer-configure-magit)
+     (dimmer-configure-posframe)
+     (dimmer-configure-which-key)
+     (dimmer-mode))
+#+end_src
+
+* Wide screens
+#+begin_src emacs-lisp
+(use-package centered-window
+  :custom
+  (cwm-centered-window-width 100))
+#+end_src
+
+* Movement
+When more than two windows are displayed and you press ~C-x o~  (normally bound to ~other-window~)
+~ace-window~ overlays a number in each window so that you can quickly
+navigate to the desired target window. And then we give ourselves a
+chord, so that ~''~ can be used to switch window.
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :bind
+    ("C-x o" . ace-window)
+    :chords
+    (("''" . ace-window))
+    :custom-face
+    ;; foreground should be computed from current theme, preserved the same way across restarts and
+    ;; restored.
+    ;; font is https://www.1001fonts.com/download/font/faster-one.regular.ttf
+    (aw-leading-char-face ((t (:inherit ace-jump-face-foreground
+                                        :font "FasterOne" :height 3.0 :foreground "dark gray" )))))
+
+#+END_SRC
+
+* Cursor
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'box
+                mixed-pitch-cursor-type 'box
+                cursor-in-non-selected-windows 'hollow
+                blink-cursor-blinks 10
+                blink-cursor-interval 0.5
+                blink-cursor-delay 0.5)
+
+  ;;  (global-hl-line-mode)
+  ;; let's enable it for all programming major modes
+  (add-hook 'prog-mode-hook #'hl-line-mode)
+  ;; and for all modes derived from text-mode
+  (add-hook 'text-mode-hook #'hl-line-mode)
+
+  (global-set-key [f5] 'hl-line-mode)
+
+  (use-package beacon
+    :config
+    (beacon-mode)
+    )
+        ;; (use-package cursory
+        ;;   :config
+        ;;   (cursory-set-preset (or (cursory-restore-latest-preset) 'box))
+        ;;   (cursory-set-preset  'box)
+        ;;   (add-hook 'kill-emacs-hook #'cursory-store-latest-preset))
+        ;; ;;; set this
+        ;; ;;; cursory-latest-state-file
+#+end_src
+
+* Utilities
+#+begin_src emacs-lisp
+  (use-package gif-screencast)
+#+end_src
+
+#+INCLUDE: "neo-fonts.org"
+#+INCLUDE: "neo-themes.org"

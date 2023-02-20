@@ -1,0 +1,22 @@
+#+begin_src emacs-lisp
+  (defun neo/message-noecho (string)
+    (let ((inhibit-read-only t))
+      (with-current-buffer (messages-buffer)
+        (goto-char (point-max))
+        (when (not (bolp))
+          (insert "\n"))
+        (insert string)
+        (when (not (bolp))
+          (insert "\n")))))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp
+    (defun neo/enter-include (module-name)
+      (let* ((line (make-string 80 ?-))
+             (template (concat "\n" line "\n" "Config: %s" "\n" line "\n")))
+        (neo/message-noecho (format template module-name))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+      (neo/enter-include "neo-core.org")
+#+END_SRC

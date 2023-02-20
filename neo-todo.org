@@ -1,0 +1,12 @@
+* Things to remember not to forget
+
+** Packages
+
+- https://github.com/noctuid/annalist.el
+- https://github.com/alexluigit/dirvish
+
+** Fonts
+- https://github.com/rubjo/victor-mono
+
+** Gist
+- https://kitchingroup.cheme.cmu.edu/blog/2014/09/13/Make-some-org-sections-read-only/

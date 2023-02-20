@@ -1,0 +1,85 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-themes.org")
+#+END_SRC
+
+* Theme Management
+
+**** Theme Switching
+Emacs doesn't have a hook on theme changes, mainly because it is not
+easy to define precisely what a theme switch is. Yet, we have a few
+uses for a reasonable approximation, here it is:
+
+#+begin_src emacs-lisp 
+   (defvar neo/current-theme 'doom-tomorrow-day "Theme applied")
+   (push 'neo/current-theme desktop-globals-to-save)
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun neo/load-theme ()
+    (interactive)
+    (neo/load-theme-internal
+     (completing-read "Load custom theme: " (mapcar 'symbol-name
+                                                    (custom-available-themes)))))
+
+#+end_src
+
+#+begin_src emacs-lisp
+    ;;; need to do something fr powerline nd other modelines
+    (defun neo/load-theme-action (x)
+    (condition-case nil
+        (progn
+          (mapc #'disable-theme custom-enabled-themes)
+          (load-theme-internal (intern x) t))
+      (error "Problem loading theme %s" x)))
+#+end_src
+
+#+begin_src emacs-lisp
+      (defun neo/update-x-defaults ()
+        (with-temp-file "~/.Xdefaults"
+          (let ((foreground (face-attribute 'default :foreground))
+                (background (face-attribute 'default :background)))
+            (insert "emacs.fullscreen: maximized\n")
+            (insert (format "emacs.background: %s\n" background))
+            (insert (format "emacs.foreground: %s\n" foreground))))
+        (call-process-shell-command "xrdb -load ~/.Xdefaults" nil 0))
+      
+;      (add-hook 'emacs-kill-hook 'neo/update-x-defaults)
+#+end_src
+
+#+begin_src emacs-lisp
+    (defun neo/load-theme-internal (theme)
+      (message "THEME: %s" theme)
+      (let ((theme (if (stringp theme) (intern theme) theme)))
+	(message "Loading theme %s (disabling others)" theme)
+	(mapc #'disable-theme custom-enabled-themes)
+	(setq neo/current-theme theme)
+	(load-theme theme t)
+	(neo/update-x-defaults)
+	;; We should really change the foreground only when org-hide-leading-stars is t.
+	;; For me this is always true
+	))
+  
+  ;      (set-face-foreground 'org-superstar-leading (face-attribute 'default :background))
+  ;      (set-face-foreground 'org-hide (face-attribute 'default :background))))
+
+#+end_src
+
+#+begin_src emacs-lisp
+  (add-hook 'desktop-after-read-hook (lambda () (neo/load-theme-internal neo/current-theme)))
+#+end_src
+
+
+**** Themes
+#+begin_src emacs-lisp
+  (use-package blackboard-theme)
+  (use-package doom-themes)
+  (use-package dracula-theme)  
+  (use-package modus-themes
+    :config
+    (setq modus-themes-syntax (list 'yellow-comments 'green-strings 'alt-syntax))
+    (setq modus-themes-org-blocks 'tinted-background)
+    )
+  (use-package molokai-theme)  
+  (use-package twilight-theme)
+#+end_src
+

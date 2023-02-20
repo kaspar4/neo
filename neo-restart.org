@@ -1,0 +1,54 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-restart.org")
+#+END_SRC
+
+* Emacs Startup
+When testing changes to the Emacs configuration it is useful to
+be able to restart Emacs from within Emacs. The following allows to
+restart Emacs when C-x C-c (normally bound to save-buffers-kill-Emacs)
+is invoked with a universal argument.
+
+Note that when we restart Emacs, all open files and frames are
+restored (courtesy of the desktop package if installed). We also retrieve the
+initial command line arguments. ~restart-emacs~ doesn't do this as
+there's no platform independent way for doing it. Note that
+~command-line-args~ is not sufficient as many arguments are deleted
+while being processed by the Emacs C code (for instance ~--debug-init~ )
+I'd still think that it would be better than completely ignoring them,
+but I'm not the author of the ~restart-emacs~ package. Here I collect
+arguments from the ~/proc~ file system, I only care about Linux anyhow.
+
+#+BEGIN_SRC emacs-lisp
+  (if (not (fboundp 'restart-emacs))
+      (use-package restart-emacs))
+
+  (defun neo/emacs-args ()
+    (with-temp-buffer
+      (insert-file-contents "/proc/self/cmdline")
+      (split-string (buffer-string) "\0" t)))
+
+  (defun neo/restart-emacs-or-exit (arg)
+    (interactive "P")
+    (if arg
+        (if (version< emacs-version "29.0")
+            (restart-emacs (cdr (neo/emacs-args)))
+          (restart-emacs))
+      (save-buffers-kill-emacs)))
+
+  (use-package emacs
+    :bind
+    ("C-x C-c" . neo/restart-emacs-or-exit))
+
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+    ;;; Emacs 29 has now a restart-emacs that re-run emacs w/ the same arguments
+    ;;; this would make our neo/emacs-args hack not needed, but we don't have
+    ;;; the full functionality of the restart-emacs package. So for now we maintain
+    ;;; the status quo
+  ;  (unintern 'restart-emacs)
+
+    ;; (use-package restart-emacs
+    ;;   :bind
+    ;;   ("C-x C-c" . neo/restart-emacs-or-exit))
+#+END_SRC

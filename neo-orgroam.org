@@ -1,0 +1,118 @@
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :custom
+    (org-roam-directory (file-truename "~/org-roam/"))
+    :bind (
+           ("C-c n f" . #'org-roam-node-find)
+           ("C-c n g" . #'org-roam-graph)
+           ("C-c n t" . #'org-roam-tag-add)
+           ("C-c n i" . #'org-roam-node-insert)
+           ("C-c n c" . #'org-roam-capture)
+           ("C-c n :" . #'org-roam-buffer-toggle)
+           ("C-c n j" . #'org-roam-dailies-capture-today))
+    :config
+    ;; (setq org-roam-dailies-directory "daily/")
+
+    ;; (setq org-roam-dailies-capture-templates
+    ;;       '(("d" "default" entry
+    ;;          "* %?"
+    ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
+    ;;               "#+title: %<%Y-%m-%d>\n"))))
+
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template
+      (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode)
+    (setq org-roam-capture-templates
+      '(("m" "main" plain
+         "%?"
+         :if-new (file+head "main/${slug}.org"
+                            "#+title: ${title}\n")
+         :immediate-finish t
+         :unnarrowed t)
+        ("r" "reference" plain "%?"
+         :if-new
+         (file+head "reference/${title}.org" "#+title: ${title}\n")
+         :immediate-finish t
+         :unnarrowed t)
+        ("a" "article" plain "%?"
+         :if-new
+         (file+head "articles/${title}.org" "#+title: ${title}\n#+filetags: :article:\n")
+         :immediate-finish t
+         :unnarrowed t)))
+    ;; If using org-roam-protocol
+    (require 'org-roam-protocol))
+#+END_SRC
+
+#+begin_src emacs-lisp
+(cl-defmethod org-roam-node-type ((node org-roam-node))
+  "Return the TYPE of NODE."
+  (condition-case nil
+      (file-name-nondirectory
+       (directory-file-name
+        (file-name-directory
+         (file-relative-name (org-roam-node-file node) org-roam-directory))))
+    (error "")))
+#+end_src
+
+#+begin_src emacs-lisp
+(defun neo/org-roam-filter-by-tag (tag-name)
+  (lambda (node)
+    (member tag-name (org-roam-node-tags node))))
+
+(defun neo/org-roam-list-notes-by-tag (tag-name)
+  (mapcar #'org-roam-node-file
+          (seq-filter
+           (neo/org-roam-filter-by-tag tag-name)
+           (org-roam-node-list))))
+
+(defun neo/org-roam-refresh-agenda-list ()
+  (interactive)
+  (setq org-agenda-files (neo/org-roam-list-notes-by-tag "Project")))
+
+;; Build the agenda list the first time for the session
+(neo/org-roam-refresh-agenda-list)
+
+(defun neo/org-roam-project-finalize-hook ()
+  "Adds the captured project file to `org-agenda-files' if the
+capture was not aborted."
+  ;; Remove the hook since it was added temporarily
+  (remove-hook 'org-capture-after-finalize-hook #'neo/org-roam-project-finalize-hook)
+
+  ;; Add project file to the agenda list if the capture was confirmed
+  (unless org-note-abort
+    (with-current-buffer (org-capture-get :buffer)
+      (add-to-list 'org-agenda-files (buffer-file-name)))))
+
+(defun neo/org-roam-find-project ()
+  (interactive)
+  ;; Add the project file to the agenda after capture is finished
+  (add-hook 'org-capture-after-finalize-hook #'neo/org-roam-project-finalize-hook)
+
+  ;; Select a project file to open, creating it if necessary
+  (org-roam-node-find
+   nil
+   nil
+   (neo/org-roam-filter-by-tag "Project")
+   :templates
+   '(("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+category: ${title}\n#+filetags: Project")
+      :unnarrowed t))))
+
+
+(defun neo/org-roam-capture-task ()
+  (interactive)
+  ;; Add the project file to the agenda after capture is finished
+  (add-hook 'org-capture-after-finalize-hook #'neo/org-roam-project-finalize-hook)
+
+  ;; Capture the new task, creating the project file if necessary
+  (org-roam-capture- :node (org-roam-node-read
+                            nil
+                            (neo/org-roam-filter-by-tag "Project"))
+                     :templates '(("p" "project" plain "* TODO %?"
+                                   :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+                                                          "#+title: ${title}\n#+category: ${title}\n#+filetags: Project"
+                                                          ("Tasks"))))))
+
+(global-set-key (kbd "C-c n t") #'neo/org-roam-capture-task)
+#+end_src

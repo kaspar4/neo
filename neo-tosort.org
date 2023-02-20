@@ -1,0 +1,49 @@
+* tab and project
+This is a combination of tab bar and project.el. Not sure how to
+organize it.
+
+#+begin_src emacs-lisp
+  (set-face-attribute 'tab-bar-tab nil :inherit 'header-line-highlight :foreground nil :background nil)
+  (set-face-attribute 'tab-bar-tab nil :inherit 'header-line-highlight :foreground nil :background nil)
+  (setq tab-bar-show t)
+  (setq tab-bar-tab-hints t)
+
+  (defun neo/number-for-tab (n)
+    (let ((fancy-numbers "⓪①②③④⑤⑥⑦⑧⑨"))
+      (if (and tab-bar-tab-hints (< n 10))
+          (substring fancy-numbers n (+ n 1))
+        "")))
+
+  (defun neo/tab-bar-tab-name-format (tab i)
+    (let ((current-p (eq (car tab) 'current-tab))
+          (tab-num (neo/number-for-tab i)))
+      (propertize
+       (concat tab-num
+               " "
+               (alist-get 'name tab)
+               (or (and tab-bar-close-button-show
+                        (not (eq tab-bar-close-button-show
+                                 (if current-p 'non-selected 'selected)))
+                        tab-bar-close-button)
+                   "")
+               " ")
+       'face (funcall tab-bar-tab-face-function tab))))
+
+  (setq tab-bar-tab-name-format-function #'neo/tab-bar-tab-name-format)
+
+  (defun neo/tab-bar-tab-name-function ()
+    (let ((project (project-current)))
+      (if project
+          (project-root project)
+        (tab-bar-tab-name-current))))
+
+  (setq tab-bar-tab-name-function #'neo/tab-bar-tab-name-function)
+
+  (defun neo/project-create-tab ()
+    (interactive)
+    (tab-bar-new-tab)
+    (magit-status))
+
+  (setq project-switch-commands #'neo/project-create-tab)
+
+#+end_src

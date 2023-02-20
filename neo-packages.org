@@ -1,0 +1,45 @@
+* Package Configurations
+
+We use ~straight.el~ for package installation, but ~use-package~ for
+configuration. Here we setup a few useful extensions.
+
+#+begin_src emacs-lisp
+  (message "package-archives %s" (if (boundp 'package-archives) "BOUND" "UNBOUND"))
+  (use-package package
+    :custom
+    (package-user-dir (neo/litter-directory "melpa" emacs-version))
+    :config
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
+#+end_src
+
+The modeline becomes unwieldy when lot of minor modes try to say
+things there.
+
+#+begin_src emacs-lisp
+  (use-package delight)
+#+end_src
+
+In theory, ~use-package-chord~ is deprecated and the functionality built-in
+into ~use-package~. In practice, without it I cannot get the ~:chords~
+keyword to work.
+
+#+begin_src emacs-lisp
+  (use-package use-package-chords
+    :config (key-chord-mode 1))
+#+end_src
+
+My understanding is that ensure-system-package has been folded into
+the ~use-package~ package. It doesn't seem the case in my version.
+  - verify this
+
+#+BEGIN_SRC emacs-lisp
+  (use-package system-packages
+    :config
+    (setq system-packages-package-manager 'apt)
+    (setq system-packages-use-sudo t)
+    )
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package use-package-ensure-system-package)
+#+END_SRC

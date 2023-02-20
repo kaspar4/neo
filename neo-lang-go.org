@@ -1,0 +1,45 @@
+* Support for Go
+
+#+begin_src emacs-lisp
+  (use-package go-mode
+    :config
+    (setq gofmt-command "goimports")
+    (add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
+    :hook
+    (go-mode . (lambda ()
+                 (eglot-ensure)
+                 (setq tab-width 4)
+                 (setq indent-tabs-mode 1)
+                 (add-hook 'before-save-hook 'gofmt-before-save)))
+    )
+
+  (setq-default eglot-workspace-configuration
+      '((:gopls .
+          ((staticcheck . t)
+           (matcher . "CaseSensitive")))))
+
+#+end_src
+
+Run ~go install github.com/davidrjenni/reftools/cmd/fillstruct@latest~
+Assign go-fill-struct to some key
+#+begin_src emacs-lisp
+(use-package go-fill-struct)
+#+end_src
+
+These two tags are complementary.
+#+begin_src emacs-lisp
+  (use-package go-add-tags)
+#+end_src
+
+go install github.com/fatih/gomodifytags@latest
+#+begin_src emacs-lisp
+  (use-package go-tag)
+#+end_src
+
+** TODO have a command that use tree-sitter for doing the right thing @ point. Insert tags, fill struct.
+
+go install  github.com/cweill/gotests/...@latest
+#+begin_src emacs-lisp
+  (use-package go-gen-test)
+#+end_src
+

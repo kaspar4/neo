@@ -1,0 +1,340 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-org.org")
+#+END_SRC
+
+* Org Mode
+
+Consider https://github.com/minad/org-modern for inspiration.
+
+I install the org-mode package very early in the init process because
+I want to use a newer version than what comes with Emacs.
+
+#+begin_src emacs-lisp
+  (use-package org
+    :custom
+    (org-hide-emphasis-markers t)
+    (org-hide-leading-stars t)
+    :config
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
+             "* TODO %?\n  %i\n  %a")
+            ("n" "Notes" entry (file "~/Dropbox/notes/capturefiles/notes.org")
+             "* %?%^G\n  :PROPERTIES:\n  :ENTERED_ON: %T\n  :END:\n%i\n")
+            ("i" "Ideas" entry (file "~/Dropbox/notes/capturefiles/ideas.org")
+             "* %?%^G\n  :PROPERTIES:\n  :ENTERED_ON: %T\n  :END:\n%i\n")
+            ("j" "Journal" entry (file+datetree "~/org/journal.org")
+             "* %?\nEntered on %U\n  %i\n  %a")))
+    (add-to-list 'ispell-skip-region-alist '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:"))
+    (add-to-list 'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC"))
+    (add-to-list 'ispell-skip-region-alist '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
+    (setq org-html-htmlize-output-type 'css)
+    :hook
+    (org-mode . variable-pitch-mode)
+    (org-mode . visual-line-mode)
+    (org-mode . neo/org-mode-setup))
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun neo/org-mode-setup ()
+    (neo/org-mode-prettify)
+    (setq cursor-type 'box)               ; not sure why it is otherwise 'bar even though I set a default of box
+    (setq mixed-pitch-cursor-type 'box)
+    (setq org-startup-indented t)
+    (setq org-pretty-entities t)
+    (setq org-startup-with-inline-images t)
+    (setq org-image-actual-width '(300))
+    (setq org-src-tab-acts-natively t)
+    (org-indent-mode)
+    (auto-fill-mode 1)
+    (custom-theme-set-faces
+     'user
+     '(org-block ((t (:inherit fixed-pitch))))
+     '(org-code ((t (:inherit (shadow fixed-pitch)))))
+     '(org-document-info ((t (:foreground "dark orange"))))
+     '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+     '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+     '(org-link ((t (:foreground "royal blue" :underline t))))
+     '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+     '(org-property-value ((t (:inherit fixed-pitch))) t)
+     '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+     '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+     '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+     '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
+    )
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun neo/org-mode-prettify ()
+    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "†")
+                                           ("#+END_SRC" . "†")
+                                           ("#+begin_src" . "†")
+                                           ("#+end_src" . "†")
+                                           ("#+BEGIN_EXAMPLE" . (?ℰ (Br . Bl) ?⇒)) ;; ℰ⇒
+                                           ("#+END_EXAMPLE"    . ?⇐)               ;; ⇐
+                                           ("#+begin_example" . (?ℰ (Br . Bl) ?⇒)) ;; ℰ⇒
+                                           ("#+end_example"    . ?⇐)               ;; ⇐
+                                           ("#+BEGIN_QUOTE" . (?𝒬 (Br . Bl) ?⇒))   ;; 𝒬⇒
+                                           ("#+END_QUOTE"    . ?⇐)                 ;; ⇐
+                                           ("#+begin_quote" . (?𝒬 (Br . Bl) ?⇒))   ;; 𝒬⇒
+                                           ("#+end_quote"    . ?⇐)                 ;; ⇐
+                                           ("[ ]" .  "☐") 
+                                           ("[X]" . "☑" ) 
+                                           ("[-]" . "❍" )  ; alternative is ("[-]" . "▣")
+                                           ("<=" . ?≤)
+                                           (">=" . "≥")
+                                           ("=>" . "⇨")))
+    (setq prettify-symbols-unprettify-at-point 'right-edge)
+;does't seem to do anything
+;    (font-lock-add-keywords 'org-mode
+;                          '(("^ *\\([-]\\) "
+;                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+    ;; TODO there's a better way to enable this
+    (prettify-symbols-mode))
+#+end_src
+
+The following should be re-run after switching themes. This is so that
+foreground gets recomputed.
+
+#+begin_src emacs-lisp
+  (let* ((variable-tuple
+            (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
+                  ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+                  ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+                  ((x-list-fonts "Verdana")         '(:font "Verdana"))
+                  ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+                  (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+         (fixed-tuple
+          (cond ((x-list-fonts "Prompt Medium")         '(:font "Prompt Medium"))
+                ((x-list-fonts "Righteous")         '(:font "Righteous"))
+                ;; TODO what is the family for monospace?
+                ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+                (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+         (base-font-color     (face-foreground 'default nil 'default))
+         (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+
+      (custom-theme-set-faces
+       'user
+       `(org-level-8 ((t (,@headline ,@fixed-tuple))))
+       `(org-level-7 ((t (,@headline ,@fixed-tuple))))
+       `(org-level-6 ((t (,@headline ,@fixed-tuple))))
+       `(org-level-5 ((t (,@headline ,@fixed-tuple))))
+       `(org-level-4 ((t (,@headline ,@fixed-tuple :height 1.1))))
+       `(org-level-3 ((t (,@headline ,@fixed-tuple :height 1.1))))
+       `(org-level-2 ((t (,@headline ,@fixed-tuple :height 1.1))))
+       `(org-level-1 ((t (,@headline ,@fixed-tuple :height 1.1))))
+       `(org-document-title ((t (,@headline ,@fixed-tuple :height 2.0 :underline nil))))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package org-superstar
+    :custom
+    (org-superstar-special-todo-items t)
+    ;; not sure which setting of ~org-superstar-remove-leading-star~ I like the most
+    (org-superstar-remove-leading-stars nil)
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
+    ;; (setq org-superstar-headline-bullets-list '("☰" "☷" "☵" "☲"  "☳" "☴"  "☶"  "☱" ))
+    ;; (setq org-superstar-headline-bullets-list '("✖" "✚" "◉" "○" "▶"))
+    (setq org-superstar-headline-bullets-list '("◆"))
+    (setq org-superstar-cycle-headline-bullets nil)
+    (setq org-ellipsis " ↴ ")
+    ;; TODO this is something that should be done at every theme switch.
+    ;; we should have some form of hooks where we also generate a ~/.Xdefaults
+    (set-face-foreground 'org-superstar-leading (face-attribute 'default :background))
+    (set-face-foreground 'org-hide (face-attribute 'default :background)))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-appear
+    :hook (org-mode . org-appear-mode))
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle no
+;(use-package org-pretty-table)
+#+end_src
+
+#+begin_src emacs-lisp
+    (use-package org-tempo
+      :straight nil				; part of org
+      :after org
+      :config
+      (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+      (add-to-list 'org-structure-template-alist '("b" . "src bash"))
+      (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+      (add-to-list 'org-structure-template-alist '("py" . "src python"))
+      (add-to-list 'org-structure-template-alist '("go" . "src go"))
+      (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
+      (add-to-list 'org-structure-template-alist '("json" . "src json")))
+#+end_src
+
+#+begin_src emacs-lisp
+;(use-package org-sidebar) seems to indirectly require byte-run
+#+end_src 
+
+#+begin_src sh
+cat > "${HOME}/.local/share/applications/org-protocol.desktop" << EOF
+[Desktop Entry]
+Name=org-protocol
+Exec=emacsclient %u
+Type=Application
+Terminal=false
+Categories=System;
+MimeType=x-scheme-handler/org-protocol;
+EOF
+
+update-desktop-database ~/.local/share/applications/
+#+end_src
+
+To disable the “confirm” prompt in Chrome, you can also make Chrome show a checkbox to tick, so that the Org-Protocol Client app will be used without confirmation. To do this, run in a shell:
+
+#+begin_src sh
+sudo mkdir -p /etc/opt/chrome/policies/managed/
+sudo tee /etc/opt/chrome/policies/managed/external_protocol_dialog.json >/dev/null <<'EOF'
+{
+  "ExternalProtocolDialogShowAlwaysOpenCheckbox": true
+}
+EOF
+sudo chmod 644 /etc/opt/chrome/policies/managed/external_protocol_dialog.json
+#+end_src
+
+and then restart Chrome (for example, by navigating to ~chrome://restart~) to make the new policy take effect.
+
+#+begin_src emacs-lisp
+  (setq org-capture-templates `(
+          ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+          "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+          ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+          "* %? [[%:link][%:description]] \nCaptured On: %U")
+          ))
+#+end_src
+
+Need to install the chrome extension from [[https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc][Chrome Web Store]]
+
+#+begin_src emacs-lisp
+  (use-package org-protocol
+    :straight nil				; part of org
+    )
+#+end_src
+
+**** Org Reveal
+#+begin_src emacs-lisp
+  (use-package ox-reveal)
+(setq org-reveal-root "file:///data/reveal")
+#+end_src
+
+**** org-present
+#+begin_src emacs-lisp
+  (use-package org-present
+    :commands org-present)
+#+end_src
+**** Mermaid
+Install mermaid
+#+begin_src sh
+sudo npm install -g mermaid.cli
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package ob-mermaid)
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((mermaid . t)
+     (ditaa . t)
+     (shell . t)
+     (scheme . t)))
+
+  (setq org-confirm-babel-evaluate nil)
+  (defun neo/org-confirm-babel-evaluate (lang body)
+    (not (string= lang "mermaid"))) 
+
+  (setq org-confirm-babel-evaluate 'neo/org-confirm-babel-evaluate)
+#+end_src
+
+#+begin_src mermaid :file test.png :pupeteer-config-file /home/mav/neo/puppeteer-config.json
+sequenceDiagram
+ A-->B: Works!
+ B-->A: More
+#+end_src
+
+#+RESULTS:
+[[file:test.png]]
+
+**** ditaa
+Install ditaa
+#+begin_src sh
+sudo apt-get install ditaa
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :config
+    (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar")
+    )
+#+end_src
+
+#+BEGIN_SRC ditaa :file /home/mav/org/images/hello-world.png
++--------------+
+|              |
+| Hello World! |
+|              |
++--------------+
+#+END_SRC
+
+#+RESULTS:
+[[file:/home/mav/org/images/hello-world.png]]
+
+
+* Dev
+This is our attempt to mark org-block regions as readonly. The hope would be to be able to capture the error,
+switch to a special buffer and replay the keypress that caused the error in the first place.
+Don't know if it will work.
+
+#+BEGIN_SRC emacs-lisp
+(defun org-mark-readonly ()
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (let* ((element (org-element-at-point))
+            (begin (org-element-property :begin element))
+            (end (org-element-property :end element)))
+       (add-text-properties begin (- end 1) '(read-only t))))
+   "read_only")
+ (message "Made readonly!"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (defun org-remove-readonly ()
+    (interactive)
+    (org-map-entries
+     (lambda ()
+       (let* ((element (org-element-at-point))
+	      (begin (org-element-property :begin element))
+	      (end (org-element-property :end element))
+	      (inhibit-read-only t))
+	   (remove-text-properties begin (- end 1) '(read-only t))))
+       "read_only"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(defun set-region-writeable (begin end)
+  "Removes the read-only text property from the marked region."
+  ;; See http://stackoverflow.com/questions/7410125
+  (interactive "r")
+  (let ((modified (buffer-modified-p))
+        (inhibit-read-only t))
+    (remove-text-properties begin end '(read-only t))
+    (set-buffer-modified-p modified)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'org-mode-hook 'org-mark-readonly)
+#+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package ox-hugo
+  ;  :pin melpa  ;`package-archives' should already have ("melpa" . "https://melpa.org/packages/")
+    :after ox)
+
+(with-eval-after-load 'ox-hugo
+  (add-to-list 'org-hugo-special-block-type-properties '("mermaid" . (:raw t))))  
+#+end_src

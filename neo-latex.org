@@ -1,0 +1,34 @@
+* LaTeX and friends
+
+#+begin_src emacs-lisp
+  ;;   ;  (use-package auctex)
+  ;; (use-package tex
+  ;;   :defer t
+  ;;   :ensure auctex
+  ;;   :config
+  ;;   (setq TeX-auto-save t))
+
+  ;; (straight-use-package 
+  ;;  '(auctex :type git :host nil :repo "https://git.savannah.gnu.org/git/auctex.git"
+  ;;    :pre-build (("./autogen.sh") ("./configure" "--without-texmf-dir" "--with-lispdir=.") ("make"))
+  ;;                ))
+#+end_src
+
+#+begin_src emacs-lisp
+;; (use-package lsp-latex)
+#+end_src
+
+#+begin_src emacs-lisp
+  ;; (use-package magic-latex-buffer
+  ;;   :after auxtex
+  ;;   :hook
+  ;;   (latex-mode . magic-latex-buffer))
+#+end_src
+
+PDF tools is a better choice, this is basically unmaintained
+#+begin_src emacs-lisp
+  ;; (use-package latex-preview-pane
+  ;;   :after auctex
+  ;;   :config
+  ;;   (latex-preview-pane-enable))
+#+end_src

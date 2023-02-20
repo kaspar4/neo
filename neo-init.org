@@ -1,0 +1,101 @@
+* Emacs startup
+
+** Early initialization
+
+*** we cannot declare a language (it would be elisp) as this result in infinite expansions, so for now we don't
+
+#+BEGIN_SRC :tangle early-init.el
+;;; early-init.el -*- lexical-binding: t; -*-
+
+;; we use straigh.el
+(setq package-enable-at-startup nil)
+
+;; not sure what this was for
+(advice-add #'x-apply-session-resources :override #'ignore)
+
+;; set/inhibit UI config to cure startup flickering
+(setq frame-inhibit-implied-resize t)
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars . 0) default-frame-alist)
+(setq tool-bar-mode nil
+      menu-bar-mode nil)
+(when (fboundp 'set-scroll-bar-mode)
+  (set-scroll-bar-mode nil))
+(setq frame-inhibit-implied-resize t)
+
+;; Native-Comp
+(setq native-comp-speed 2
+      comp-speed 2)
+(setq native-comp-async-report-warnings-errors nil
+      comp-async-report-warnings-errors nil)
+(setq native-comp-async-query-on-exit t
+      comp-async-query-on-exit t)
+
+;; Defer garbage collection further back in the startup process
+(setq gc-cons-threshold most-positive-fixnum)
+#+END_SRC
+
+** Initialization
+
+#+BEGIN_SRC :tangle init.el
+  ;;; init.el -*- lexical-binding: t; -*-
+
+  (require 'subr-x) ; for string-remove-suffix
+
+  ;;; We will be using no-littering, but we need first to tell straight to keep
+  ;;; repo and build directories out of the way
+  (defun neo/litter-directory (&optional leaf-dir version)
+    (let* ((dir (directory-file-name
+		 (file-name-directory user-emacs-directory)))
+	   (distribution (string-remove-suffix ".d" dir))
+	   (package-dir (if leaf-dir leaf-dir ""))
+	   (version-dir (if version version "")))
+      (file-name-as-directory (format "%s-save.d/%s/%s" distribution package-dir version-dir))))
+
+  (setq straight-base-dir (neo/litter-directory))
+  (setq straight-build-dir (neo/litter-directory "straight/build" emacs-version))
+
+  ;;; streaight.el bootstrap code from https://github.com/raxod502/straight.el#getting-started
+  ;;; NOTE: the directory used to be user-emacs-directory, we are moving packages
+  ;;; out of our configuration and in places compatible with no-littering
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+	 (expand-file-name "straight/repos/straight.el/bootstrap.el" straight-base-dir))
+	(bootstrap-version 5))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+	  (url-retrieve-synchronously
+	   "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+
+  ;;; Install org from upstream repo before using org-babel, or we would
+  ;;; get whatever old version is distributed with Emacs.
+  (straight-use-package '(org
+			  :type git
+			  :repo "https://code.orgmode.org/bzg/org-mode.git"
+			  :local-repo "org"
+			  :depth full
+			  :pre-build (straight-recipes-org-elpa--build)
+			  :build (:not autoloads)
+			  :files (:defaults "lisp/*.el" ("etc/styles/" "etc/styles/*"))))
+
+  (straight-use-package 'use-package)
+  ;; Configure use-package to use straight.el by default
+  (use-package straight
+    :custom (straight-use-package-by-default t))
+
+  (require 'ox-org)
+  (with-temp-buffer
+    (insert-file-contents "~/neo/neo.org")
+    ;; TODO should export to a different file and move to this only if different
+    ;; this would allow us to cache neo-flat.el.
+    (let* ((flat-neo-config-dir (neo/litter-directory "neo"))
+	   (flat-neo-config-file (expand-file-name "neo-flat.org" flat-neo-config-dir)))
+      (make-directory flat-neo-config-dir t)
+      (org-export-to-file 'org flat-neo-config-file)
+      (org-babel-load-file flat-neo-config-file)))
+#+END_SRC

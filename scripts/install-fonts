@@ -1,0 +1,49 @@
+#!/bin/bash
+
+TMP_FILE=$(tempfile --prefix 'font-') || exit
+#trap "rm -f -- '${TMP_FILE}'" EXIT
+echo "Using ${TMP_FILE}"
+
+SCRIPT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+echo "Script dir ${SCRIPT_DIR}"
+
+ORG_FILE="${SCRIPT_DIR}/../neo-fonts.org"
+
+# later we'll want languages like sh-install-font so that we can tagle from here
+# but in order to edit such blocks as shell we'll want something like:
+# (add-to-list 'org-src-lang-modes '("sh-install-fonts" . sh))
+
+# echo "
+#     (progn
+#       (require 'ob-tangle)
+#       (org-babel-tangle-file \"${ORG_FILE}\" \"${TMP_FILE}\"))
+# "
+
+emacs -Q --batch --eval "
+    (progn
+      (require 'ob-tangle)
+      (org-babel-tangle-file \"${ORG_FILE}\" \"${TMP_FILE}\" \"sh-install-fonts\"))
+"
+
+WORK_DIR=$(mktemp -d)
+
+if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
+  echo "Could not create temp dir"
+  exit 1
+fi
+
+function cleanup {      
+  rm -rf "$WORK_DIR"
+  echo "Deleted temp working directory $WORK_DIR"
+}
+
+#trap cleanup EXIT
+
+cd ${WORK_DIR}
+source ${TMP_FILE}
+
+#rm -f -- "${TMP_FILE}"
+#rm -rf -- "${WORK_DIR}"
+#trap - EXIT
+exit 0
+

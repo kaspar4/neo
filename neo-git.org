@@ -1,0 +1,53 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-git.org")
+#+END_SRC
+
+* Git
+
+I use magit for interacting with git repositories. And I'm forcing
+myself to use the command line git as little as possible. When I
+remember to force myself, that's it.
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :config
+    (setq magit-save-repository-buffers 'dontask)
+    :custom
+    (magit-list-refs-sortby "-creatordate") ; doesn't seem to have any effect
+    (magit-refs-show-commit-count 'branch) ; may be too expensive
+    ; TODO: this should be the default behavior of magit-builtin-completing-read
+    ; when ivy is enabed gobally. But I am not sure of what is the actual situation.
+    (magit-completing-read-function 'magit-builtin-completing-read) ; 'ivy-completing-read)
+    :init
+    ;; NOTE: order of functions in this hook is important, we make this clear with setq
+    ;; instead of gambling with add-hook. There's magit-add-section-hook that might be better.
+    ;; TODO: find the right place for magit-insert-branch-description (might also be
+    ;; useful in magit-refs-sections-hook)
+    (setq magit-status-sections-hook
+	  '(magit-insert-status-headers
+	    magit-insert-merge-log
+	    magit-insert-rebase-sequence
+	    magit-insert-am-sequence
+	    magit-insert-sequencer-sequence
+	    magit-insert-bisect-output
+	    magit-insert-bisect-rest
+	    magit-insert-bisect-log
+	    magit-insert-untracked-files
+	    magit-insert-unstaged-changes
+	    magit-insert-staged-changes
+	    magit-insert-stashes
+	    magit-insert-unpushed-to-pushremote
+	    magit-insert-unpushed-to-upstream-or-recent
+	    magit-insert-unpulled-from-pushremote
+	    magit-insert-unpulled-from-upstream
+	    magit-insert-local-branches))
+    :bind
+    ("<f12> s" . 'magit-status)
+    ("<f12> g" . 'counsel-git-grep))
+#+end_src
+
+Forge allows to interact with GitHub (and similar deployments, git lab
+(soon) git ea etc). This for actions like pull requests and issues.
+#+begin_src emacs-lisp
+  (use-package forge :after magit)
+#+end_src

@@ -1,0 +1,79 @@
+#+BEGIN_SRC emacs-lisp
+  (neo/enter-include "neo-litter.org")
+#+END_SRC
+
+* Save Areas
+Emacs (and emacs packages) tend to store lot of files in the .emacs.d directory. This wouldn't be
+particularly problematic if it wasn't for the fact that my .emacs-*.d is also a git repository. It is
+possible to ignore files in git, but it become annoying to have to modify .gitignore just because I
+tried a new package. So we will move everything to a ~.save~ directory.
+
+Most of this will be accomplished by the ~no-litter~ package, but we initialize here a few variables
+so that the same places can be used by other packages no-litter knows nothing about.
+
+** Garbage
+There is no such thing as garbage, just useful stuff in the wrong place.
+I wan tit out of my emacs configuration.
+
+#+begin_src emacs-lisp
+  (use-package no-littering
+    :init
+    ;; Still debating whether these dirs should be per-distro.
+    ;(setq no-littering-etc-directory (expand-file-name "~/.emacs-save.d/config"))
+    ;(setq no-littering-var-directory (expand-file-name "~/.emacs-save.d/data"))
+    (setq no-littering-etc-directory (neo/litter-directory "config"))
+    (setq no-littering-var-directory (neo/litter-directory "data"))
+    (setq custom-file (expand-file-name "custom.el" no-littering-var-directory)))
+#+end_src
+
+** Autosave
+*** Files
+By default autosave files are saved in the same directory of the file
+they're related to (I think the exception is that remote files are
+saved in some local temporary directory). I find this annoying, so I
+put them together with the other "garbage".
+Autosave files are ephemeral and are deleted when a buffer is saved in
+its visited file (by default, but I don't see a reason for changing
+that), otherwise it would make sense to discuss whether the git branch
+shoud be part of the autosave file name.
+#+begin_src emacs-lisp
+  :init
+  (setq auto-save-file-name-transforms
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+#+end_src
+
+*** History
+#+begin_src emacs-lisp
+  (use-package emacs
+    :config
+    (savehist-mode))
+#+end_src
+
+** Backups
+
+These is my configuration for backups. The directory itself is set by
+no-littering.
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :config
+    (setq backup-by-copying t)
+    (setq delete-old-versions t)
+    (setq kept-new-versions 6)
+    (setq kept-old-versions 2)
+    (setq version-control t))
+#+end_src
+
+** Destop Save
+
+#+BEGIN_SRC emacs-lisp
+  (use-package emacs
+    :init
+    (setq desktop-save t)
+    (desktop-save-mode 1))
+#+END_SRC
+
+** Variables
+
+I persist global variables by adding them to
+~deskop-globals-to-save~. I could have used savehist for this.

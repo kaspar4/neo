@@ -1,0 +1,17 @@
+* Support for miscellaneous language
+Some of these don't even count as languages and the corresponding
+Emacs packages do little more than syntax highlighting. Still they are
+things I encounter while developing software and even simple syntax
+hilighting bring a smile to my face.
+
+#+begin_src emacs-lisp
+(use-package yaml-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package protobuf-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package terraform-mode)
+#+end_src

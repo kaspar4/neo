@@ -1,0 +1,55 @@
+#!/bin/bash
+
+DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+
+cd $DIR
+
+DEBIAN_VERSION=${1:-local}
+EMACS_VERSION=${2:-27.2}
+
+if [[ $(lsb_release --short --id) != "Debian" && $(lsb_release --short --id) != "Linuxmint" && ${DEBIAN_VERSION} == "local" ]]; then
+    echo "Local build are only supported on Debian hosts"
+    exit 1
+fi
+
+# Disable address space randomization; this is needed
+# for emacs dumping
+# TODO: check if this is still needed
+echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+
+if [[ ${EMACS_VERSION} == "master" ]]; then
+    EMACS_CONFIG="--with-native-compilation"
+fi
+EMACS_CONFIG="--with-native-compilation"
+
+if [[ ${DEBIAN_VERSION} == "local" ]]; then
+    sudo mkdir /usr/local/emacs
+    sudo chown ${USER} /usr/local/emacs
+    DEBIAN_VERSION=$(lsb_release --codename --short)
+    echo "Local build for Emacs ${EMACS_VERSION} (with ${EMACS_CONFIG}) on ${DEBIAN_VERSION}"
+    ./scripts/install_dependencies ${DEBIAN_VERSION}
+    ./scripts/download ${EMACS_VERSION}
+    ./scripts/build ${EMACS_VERSION} ${EMACS_CONFIG}
+else
+    echo "Docker build for Emacs ${EMACS_VERSION} on ${DEBIAN_VERSION}"
+
+    # We cannot mount a directory while building a docker container. Still we want to tag the image with the commit
+    # sha of main head. So we pull from origin, find the commit hash and pass it so that when inside the container we clone
+    # the repo, we can then checkout at the same commit point.
+    ./scripts/download ${EMACS_VERSION}
+    SOURCE_DIR="/usr/local/emacs_sources/${EMACS_VERSION}"
+    TAG=${EMACS_VERSION}
+    if [[ ${EMACS_VERSION} == "master" ]]; then
+        TAG=$(cd ${SOURCE_DIR}; git rev-parse HEAD | cut -c 1-8)
+    fi
+
+    BUILD_ARGS="--build-arg GIT_SHA="${TAG}" --build-arg EMACS_CONFIG="${EMACS_CONFIG}" --build-arg DEBIAN_VERSION=${DEBIAN_VERSION} --build-arg EMACS_VERSION=${EMACS_VERSION}"
+
+    DOCKER_BUILDKIT=1 docker build -t emacs:${TAG} ${BUILD_ARGS} -f ./Dockerfile .
+fi
+
+# Re-enable address space randomization
+echo 2 | sudo tee /proc/sys/kernel/randomize_va_space
+
+# ru with:
+#docker run --ipc host --rm --name emacs  -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix  -e UID="1000" -e GID="1000" -v ~/.emacs.d:/home/emacs/.emacs.d -v ~/zero:/mnt/workspace emacs

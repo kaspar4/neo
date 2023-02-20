@@ -1,0 +1,72 @@
+#!/bin/bash
+set +x
+
+EMACS_VERSION=${1:-27.2}
+GIT_SHA=${2:unknown}
+
+if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+    TOP_DIR="/emacs"
+    SOURCE_DIR="/emacs"
+else
+    TOP_DIR="${EMACS_VERSION}"
+    SOURCE_DIR="/usr/local/emacs/sources/${EMACS_VERSION}"
+fi
+
+echo "Source in ${SOURCE_DIR}"
+
+# if [ -d "./emacs" ]; then
+#     echo "Existing emacs directory, bailing out. Please remove and rerun as needed"
+#     exit 1
+# fi
+
+###
+#   Compile from master
+#
+if [[ ${EMACS_VERSION} == "master" ]]; then
+    # If we have a `.git` subfolder we know
+    # we should pull, rather than cloning
+    if [[ -d ${SOURCE_DIR}/.git ]]; then
+	(cd ${SOURCE_DIR}; git pull --ff-only)
+    else
+	git clone --depth 1 -b master git://git.sv.gnu.org/emacs.git ${SOURCE_DIR}
+    fi
+    if [[ ${GIT_SHA} != "unknown" ]]; then
+        git checkout ${GIT_SHA}
+    fi
+    sudo chown --recursive ${USER} ${SOURCE_DIR}
+    # Nothing else to be done, the rest of the file deals with actual releases (or release candidates)
+    exit 0
+fi
+
+###
+#   Download releases or release candidates
+#
+if [[ "${EMACS_VERSION}" =~ ^(.*)(-rc[0-9])$ ]]; then
+    TAR_BASE_URL="https://alpha.gnu.org/gnu/emacs/pretest"
+else
+    TAR_BASE_URL="http://mirror.rit.edu/gnu/emacs"
+fi
+
+# we should not hardcode the suffix and the 'J' below and rather get the best
+TAR_FILENAME=emacs-${EMACS_VERSION}.tar.xz
+
+EMACS_TAR_URL=${TAR_BASE_URL}/${TAR_FILENAME}
+
+# Release candidate have the final release version (without the -rc# part) in their toplevel dir
+EMACS_RELEASE_VERSION=${EMACS_VERSION%-rc*}
+
+if [[ ! -d ${SOURCE_DIR} ]]; then
+  sudo  mkdir ${SOURCE_DIR}
+  sudo chown ${USER} ${SOURCE_DIR}
+#    wget --progress=bar:force:noscroll -qO- ${EMACS_TAR_URL} | tar xJ -f - -C $(dirname ${SOURCE_DIR}) --transform s/emacs-${EMACS_RELEASE_VERSION}/${EMACS_VERSION}/
+    echo wget --progress=bar:force:noscroll -qO- ${EMACS_TAR_URL} | tar xJ -f - -C $(dirname ${SOURCE_DIR}) --transform s/emacs-${EMACS_RELEASE_VERSION}/${TOP_DIR}/
+    wget --progress=bar:force:noscroll -qO- ${EMACS_TAR_URL} | tar xJ -f - -C $(dirname ${SOURCE_DIR}) --transform s/emacs-${EMACS_RELEASE_VERSION}/${TOP_DIR}/
+fi
+
+# doesn't work in containers
+#gpg --auto-key-retrieve --verify ${SIGNATURE_FILENAME} ${TAR_FILENAME}
+
+# building requires running autogen.sh (for builds from master only)
+# so as a general rule we make sources owned by $USER. In docker this would
+# often be root
+chown --recursive ${USER} ${SOURCE_DIR}

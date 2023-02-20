@@ -1,0 +1,12 @@
+#+begin_src emacs-lisp
+  (use-package xkcd)
+#+end_src
+
+This if you really want to annoy people.
+#+begin_src emacs-lisp
+(use-package selectric-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package wttrin)
+#+end_src

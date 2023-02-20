@@ -1,0 +1,65 @@
+#!/bin/bash
+# -*- shell-script -*-
+
+PARAMS=""
+EMACS="system"
+EMACS_BIN=""
+
+while (( "$#" )); do
+  case "$1" in
+    -x|--with-emacs)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+	  EMACS=$2
+	  shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
+
+if [[ -d /usr/local/emacs/dist/${EMACS} ]]; then
+    PREFIX="/usr/local/emacs/dist/${EMACS}"
+fi
+   
+if [[ ${EMACS} == "system" ]]; then
+    PREFIX="/usr"
+fi
+
+EMACS_BIN="${PREFIX}/bin/emacs"
+if [[ -z ${EMACS_BIN} ]]; then
+    echo "Error: ${EMACS} is not a known emacs binary" >&2
+    exit 2
+fi
+
+# set positional arguments in their proper place
+eval set -- "$PARAMS"
+
+export EMACS
+
+# TODO use the location of this script
+USER_DIR=${HOME}/neo
+
+if [[ ! -e ${USER_DIR}/init.el ]]; then
+    sed -n -e '/^#+BEGIN_SRC.*:tangle init/,${p;/^#+END_SRC/q}' ${USER_DIR}/neo-init.org | sed '1d;$d' > ${USER_DIR}/init.el
+fi
+
+if [[ ! -e ${USER_DIR}/early-init.el ]]; then
+    sed -n -e '/^#+BEGIN_SRC.*:tangle early-init/,${p;/^#+END_SRC/q}' ${USER_DIR}/neo-init.org | sed '1d;$d' > ${USER_DIR}/early-init.el
+fi
+
+# TODO add command line flag to select binary
+${EMACS_BIN} "$@"
+
+# shouldn't be necessary, but for the version matching
+# what's installed as system emacs, the wrong dump file is found
+#DUMP_FILE=$(find ${PREFIX} -name emacs.pdmp)
+# For now we don't use this. But when we had matching versions
+# installed in /usr/local, pdump from the /usr/local was preferred
+# resulting in a mismatch
+#${EMACS_BIN} --dump-file ${DUMP_FILE} "$@"
