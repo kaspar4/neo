@@ -1,0 +1,29 @@
+load("//build/copybara:copybara.bzl", "copybara_sync", "copybara_workflow")
+
+copybara_workflow(
+    name = "workflow",
+    sot_repo = "kaspar4/uno",
+    target_repo = "kaspar4/neo",
+    push_includes = [
+        "devex/editors/emacs/**",
+        "infra/ansible/emacs.yaml",
+        "infra/ansible/roles/fonts/**",
+        "infra/ansible/roles/emacs-config/**",
+        "infra/ansible/roles/emacs-install/**",
+    ],
+    push_excludes = [
+        "devex/editors/emacs/assets/hacker.png",
+    ],
+    # push_transformations = [
+    #     move("devex/editors/emacs", ""),
+    #     move("EXTERNAL_LICENSE", "LICENSE"),
+    #     move("dot_gitignore", ".gitignore"),
+    #     move("infra/ansible", "ansible"),
+    # ],
+)
+
+copybara_sync(
+    name = "sync",
+    workflow = ":workflow",
+)
+
