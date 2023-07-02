@@ -14,13 +14,13 @@ copybara_workflow(
     push_excludes = [
         "devex/editors/emacs/assets/hacker.png",
     ],
-    # push_transformations = [
-    #     move("devex/editors/emacs", ""),
-    #     move("EXTERNAL_LICENSE", "LICENSE"),
-    #     move("dot_gitignore", ".gitignore"),
-    #     move("infra/ansible", "ansible"),
-    # ],
-)
+    moves = {
+        "devex/editors/emacs": "",
+        "EXTERNAL_LICENSE": "LICENSE",
+        "dot_gitignore": ".gitignore",
+        "infra/ansible": "ansible",
+    },
+ )
 
 copybara_sync(
     name = "sync",
