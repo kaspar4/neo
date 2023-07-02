@@ -6,19 +6,20 @@ copybara_workflow(
     target_repo = "kaspar4/neo",
     push_includes = [
         "devex/editors/emacs/**",
-        "infra/ansible/emacs.yaml",
-        "infra/ansible/roles/fonts/**",
-        "infra/ansible/roles/emacs-config/**",
-        "infra/ansible/roles/emacs-install/**",
+        # "infra/ansible/emacs.yaml",
+        # "infra/ansible/roles/fonts/**",
+        # "infra/ansible/roles/emacs-config/**",
+        # "infra/ansible/roles/emacs-install/**",
     ],
     push_excludes = [
         "devex/editors/emacs/assets/hacker.png",
+        "devex/editors/emacs/LICENSE_INTERNAL_README"
     ],
     moves = {
         "devex/editors/emacs": "",
         "EXTERNAL_LICENSE": "LICENSE",
         "dot_gitignore": ".gitignore",
-        "infra/ansible": "ansible",
+#        "infra/ansible": "ansible",
     },
  )
 
