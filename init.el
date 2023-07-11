@@ -159,9 +159,14 @@
 ;;;-----------------------------------------------------------------------------------
 ;;; Restart Emacs
 
+(defun neo/sync-neo ()
+  (message "We try to sync Emacs before restarting"))
+
 (defun neo/restart-emacs-or-exit (arg)
-  (interactive "P")
-  (if arg
+  (interactive "p")
+  (if (>= arg 16)
+      (neo/sync-neo))
+  (if (>= arg 4)
       (restart-emacs)
     (save-buffers-kill-emacs)))
 
