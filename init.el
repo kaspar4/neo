@@ -13,15 +13,18 @@
 :doc adds a documentation string, mainly for reminding me of what packages do."
   (declare (indent defun))
   (let ((args (map-delete args :doc)))
-    `(use-package ,name
-					;     :elpaca nil
-       ,@args)))
+    `(use-package
+      ,name
+      ;     :elpaca nil
+      ,@args)))
 
 ; TODO make this more general
 (defun neo/maybe-install-fonts ()
-  (let ((font-dir (concat (or (getenv "XDG_DATA_HOME")
-                              (expand-file-name "~/.local/share"))
-                          "/fonts/")))
+  (let ((font-dir
+         (concat
+          (or (getenv "XDG_DATA_HOME")
+              (expand-file-name "~/.local/share"))
+          "/fonts/")))
     (unless (file-exists-p (concat font-dir "all-the-icons.ttf"))
       (all-the-icons-install-fonts t))))
 
@@ -30,34 +33,71 @@
 ;;; Packages
 
 (defvar elpaca-installer-version 0.5)
-(defvar elpaca-directory (expand-file-name "elpaca/" no-littering-etc-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
-                              :files (:defaults (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+(defvar elpaca-directory
+  (expand-file-name "elpaca/" no-littering-etc-directory))
+(defvar elpaca-builds-directory
+  (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory
+  (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order
+  '(elpaca
+    :repo "https://github.com/progfolio/elpaca.git"
+    :ref nil
+    :files (:defaults (:exclude "extensions"))
+    :build (:not elpaca--activate-package)))
+(let* ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
        (build (expand-file-name "elpaca/" elpaca-builds-directory))
        (order (cdr elpaca-order))
        (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (add-to-list
+   'load-path
+   (if (file-exists-p build)
+       build
+     repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
+    (when (< emacs-major-version 28)
+      (require 'subr-x))
     (condition-case-unless-debug err
-        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (call-process "git" nil buffer t "clone"
-                                       (plist-get order :repo) repo)))
-                 ((zerop (call-process "git" nil buffer t "checkout"
-                                       (or (plist-get order :ref) "--"))))
+        (if-let ((buffer
+                  (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop
+                   (call-process "git"
+                                 nil
+                                 buffer
+                                 t
+                                 "clone"
+                                 (plist-get order :repo)
+                                 repo)))
+                 ((zerop
+                   (call-process "git"
+                                 nil
+                                 buffer
+                                 t
+                                 "checkout"
+                                 (or (plist-get order :ref) "--"))))
                  (emacs (concat invocation-directory invocation-name))
-                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((zerop
+                   (call-process
+                    emacs
+                    nil
+                    buffer
+                    nil
+                    "-Q"
+                    "-L"
+                    "."
+                    "--batch"
+                    "--eval"
+                    "(byte-recompile-directory \".\" 0 'force)")))
                  ((require 'elpaca))
                  ((elpaca-generate-autoloads "elpaca" repo)))
-            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-          (error "%s" (with-current-buffer buffer (buffer-string))))
+          (progn
+            (message "%s" (buffer-string))
+            (kill-buffer buffer))
+          (error
+           "%s"
+           (with-current-buffer buffer
+             (buffer-string))))
       ((error) (warn "%s" err) (delete-directory repo 'recursive))))
   (unless (require 'elpaca-autoloads nil t)
     (require 'elpaca)
@@ -66,11 +106,12 @@
 (add-hook 'after-init-hook #'elpaca-process-queues 90)
 (elpaca `(,@elpaca-order))
 
-(elpaca elpaca-use-package
-  ;; Enable :elpaca use-package keyword.
-  (elpaca-use-package-mode)
-  ;; Assume :elpaca t unless otherwise specified.
-  (setq elpaca-use-package-by-default t))
+(elpaca
+ elpaca-use-package
+ ;; Enable :elpaca use-package keyword.
+ (elpaca-use-package-mode)
+ ;; Assume :elpaca t unless otherwise specified.
+ (setq elpaca-use-package-by-default t))
 
 ;; Block until current queue processed.
 (elpaca-wait)
@@ -81,7 +122,8 @@
   (setq system-packages-use-sudo t)
   (setq async-shell-command-buffer 'rename-buffer))
 
-(neo/use-package use-package-ensure-system-package :after system-packages)
+(neo/use-package use-package-ensure-system-package
+  :after system-packages)
 
 (neo/use-package use-package-chords
   :config (key-chord-mode 1))
@@ -107,7 +149,7 @@
 (setq-default truncate-lines t)
 (setq-default indent-tabs-mode nil)
 (setq custom-safe-themes t) ; not sure, I'll probaby use very few themes no need to trust 'em all
-(setq scroll-conservatively 10000)    ; not sure abut this one
+(setq scroll-conservatively 10000) ; not sure abut this one
 (setq scroll-preserve-screen-position t)
 (put 'narrow-to-region 'disabled nil)
 (tool-bar-mode -1)
@@ -127,34 +169,66 @@
 
 (prefer-coding-system 'utf-8)
 
-(defvar neo/backup-directory (expand-file-name "backups" no-littering-var-directory))
+(defvar neo/backup-directory
+  (expand-file-name "backups" no-littering-var-directory))
 
 (if (not (file-exists-p neo/backup-directory))
-        (make-directory neo/backup-directory t))
+    (make-directory neo/backup-directory t))
 (setq backup-directory-alist `(("." . ,neo/backup-directory)))
-(setq make-backup-files t               ; backup of a file the first time it is saved.
-      backup-by-copying t               ; don't clobber symlinks
-      version-control t                 ; version numbers for backup files
-      delete-old-versions t             ; delete excess backup files silently
-      delete-by-moving-to-trash t
-      kept-old-versions 6               ; oldest versions to keep when a new numbered backup is made (default: 2)
-      kept-new-versions 9               ; newest versions to keep when a new numbered backup is made (default: 2)
-      auto-save-default t               ; auto-save every buffer that visits a file
-      auto-save-timeout 20              ; number of seconds idle time before auto-save (default: 30)
-      auto-save-interval 200            ; number of keystrokes between auto-saves (default: 300)
-      )
+(setq
+ make-backup-files t ; backup of a file the first time it is saved.
+ backup-by-copying t ; don't clobber symlinks
+ version-control t ; version numbers for backup files
+ delete-old-versions t ; delete excess backup files silently
+ delete-by-moving-to-trash t
+ kept-old-versions 6 ; oldest versions to keep when a new numbered backup is made (default: 2)
+ kept-new-versions 9 ; newest versions to keep when a new numbered backup is made (default: 2)
+ auto-save-default t ; auto-save every buffer that visits a file
+ auto-save-timeout 20 ; number of seconds idle time before auto-save (default: 30)
+ auto-save-interval 200 ; number of keystrokes between auto-saves (default: 300)
+ )
 
 (neo/use-package key-chord
   :elpaca nil
   :config
-  (key-chord-define-global "``"     'toggle-menu-bar-mode-from-frame)
-  (key-chord-define-global ".."     'comment-or-uncomment-region)
-  (key-chord-define-global ",,"     'sort-lines)
-  (key-chord-define-global "//"     'align-regexp))
+  (key-chord-define-global "``" 'toggle-menu-bar-mode-from-frame)
+  (key-chord-define-global ".." 'comment-or-uncomment-region)
+  (key-chord-define-global ",," 'sort-lines)
+  (key-chord-define-global "//" 'align-regexp))
 
 (global-auto-revert-mode)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;;; Write protect
+
+;;; This is special and works for me. Shouldn't impact anybody else. Unless you're me
+(defvar neo/monorepo-admin "mav")
+(defvar neo/monorepo-path (expand-file-name (format "~/uno")))
+
+(defun neo/monorepo ()
+  (if (and (equal (user-login-name) neo/monorepo-admin)
+           (file-directory-p neo/monorepo-path))
+      neo/monorepo-path))
+
+(defun neo/neo-file-p (file)
+  (string-prefix-p "/home/mav/neo/" file))
+
+(defun neo/maybe-write-protect ()
+  (if (and (neo/monorepo) (neo/neo-file-p (buffer-file-name)))
+      (progn
+        (setq buffer-read-only t))))
+
+(add-hook 'find-file-hook #'neo/maybe-write-protect)
+
+(defadvice read-only-mode
+    (around neo/disable-toggle-readonly activate)
+  (if (neo/neo-file-p (buffer-file-name))
+      (message
+       (format
+        "You probably want to edit this file inside the monorepo at %s"
+        neo/monorepo-path))
+    ad-do-it))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Restart Emacs
@@ -170,7 +244,7 @@
       (restart-emacs)
     (save-buffers-kill-emacs)))
 
-(global-set-key (kbd "C-x C-c")  'neo/restart-emacs-or-exit)
+(global-set-key (kbd "C-x C-c") 'neo/restart-emacs-or-exit)
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Save Areas
@@ -181,10 +255,13 @@
   ;; in particular elpaca and eln-cache
   ;(setq no-littering-etc-directory (expand-file-name "litter/config" user-emacs-directory))
   ;(setq no-littering-var-directory (expand-file-name "litter/data" user-emacs-directory))
-  (setq custom-file (expand-file-name "custom.el" no-littering-var-directory))
+  (setq custom-file
+        (expand-file-name "custom.el" no-littering-var-directory))
   :config
   (setq auto-save-file-name-transforms
-        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+        `((".*"
+           ,(no-littering-expand-var-file-name "auto-save/")
+           t))))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; History
@@ -198,7 +275,8 @@
 (setq version-control t)
 
 (setq desktop-save t)
-(setq neo/desktop-path (expand-file-name "desktop" no-littering-var-directory))
+(setq neo/desktop-path
+      (expand-file-name "desktop" no-littering-var-directory))
 (setq desktop-path `(,neo/desktop-path))
 (setq desktop-dirname neo/desktop-path)
 (setq desktop-restore-eager 5)
@@ -213,12 +291,15 @@
 (neo/use-package undo-tree
   :delight undo-tree-mode
   :chords (("uu" . undo-tree-visualize)) ; the only place this annoys me is when I have to type 'uuid'
-  :init (global-undo-tree-mode)
+  :init
+  (global-undo-tree-mode)
   (setq undo-tree-visualizer-diff t)
   (setq undo-tree-visualizer-timestamps t)
   :config
-  (let ((undo-save-dir (expand-file-name "undo" no-littering-var-directory)))
-    (setq undo-tree-history-directory-alist `(("." . ,undo-save-dir)))))
+  (let ((undo-save-dir
+         (expand-file-name "undo" no-littering-var-directory)))
+    (setq undo-tree-history-directory-alist
+          `(("." . ,undo-save-dir)))))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Help
@@ -241,29 +322,34 @@
 
 (neo/use-package vertico
   :doc "UI component for minibuffer selection"
-  :elpaca (vertico :type git :host github :repo "minad/vertico"
-                   :files (:defaults "extensions/*"))
+  :elpaca
+  (vertico
+   :type git
+   :host github
+   :repo "minad/vertico"
+   :files (:defaults "extensions/*"))
   :init
   (vertico-mode)
   (setq vertico-resize t)
-  (setq vertico-count 20)		; TODO: maybe a fraction of window height would be better
-)
+  (setq vertico-count 20) ; TODO: maybe a fraction of window height would be better
+  )
 
 (neo/use-package vertico-posframe
   :doe "Display vertico selections in a popup window"
-  :disabled				; not sure if I want it or not
+  :disabled ; not sure if I want it or not
   :after vertico
-  :config
-  (vertico-posframe-mode 1))
+  :config (vertico-posframe-mode 1))
 
 (neo/use-package vertico-directory
   :doc "Make navigating directories in vertico completions nicer by deleting entire components"
   :after vertico
   :elpaca nil
-  :bind (:map vertico-map
-              ("RET" . vertico-directory-enter)
-              ("DEL" . vertico-directory-delete-char)
-              ("M-DEL" . vertico-directory-delete-word))
+  :bind
+  (:map
+   vertico-map
+   ("RET" . vertico-directory-enter)
+   ("DEL" . vertico-directory-delete-char)
+   ("M-DEL" . vertico-directory-delete-word))
   ;; TODO: got this somewhere in the intertubes, but we don't use rfn-eshadow in Neo (yet?)
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
@@ -273,32 +359,38 @@
   ;; Configure a custom style dispatcher (see the Consult wiki)
   ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
   ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
+  (setq
+   completion-styles '(orderless basic)
+   completion-category-defaults nil
+   completion-category-overrides '((file (styles partial-completion)))))
 
 (neo/use-package marginalia
   :doc "Annotate completions with additional information"
   ;; Either bind `marginalia-cycle` globally or only in the minibuffer
-  :bind (("M-A" . marginalia-cycle)
-         :map minibuffer-local-map
-         ("M-A" . marginalia-cycle))
+  :bind
+  (("M-A" . marginalia-cycle)
+   :map
+   minibuffer-local-map
+   ("M-A" . marginalia-cycle))
   :custom
   (marginalia-max-relative-age 0)
   (marginalia-align 'left)
   (marginalia-align-offset 16)
-  :init
-  (marginalia-mode))
+  :init (marginalia-mode))
 
 (neo/use-package corfu
   :doc "Show completions near the point"
-  :elpaca (corfu :host github :repo "minad/corfu" :files (:defaults "extensions/*"))
+  :elpaca
+  (corfu
+   :host github
+   :repo "minad/corfu"
+   :files (:defaults "extensions/*"))
   :hook (lsp-completion-mode . kb/corfu-setup-lsp) ; Use corfu for lsp completion
   :custom
   ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
   ;; want to perform completion
   (tab-always-indent 'complete)
-  (completion-cycle-threshold nil)      ; Always show candidates in menu
+  (completion-cycle-threshold nil) ; Always show candidates in menu
 
   (corfu-auto nil)
   (corfu-auto-prefix 2)
@@ -318,16 +410,15 @@
   ;; orderless, otherwise first component is ignored, unless `corfu-separator'
   ;; is inserted.
   (corfu-quit-at-boundary nil)
-  (corfu-separator ?\s)            ; Use space
+  (corfu-separator ?\s) ; Use space
   (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
-  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
-  (corfu-preselect-first t)        ; Preselect first candidate?
+  (corfu-preview-current 'insert) ; Preview first candidate. Insert on input if only one
+  (corfu-preselect-first t) ; Preselect first candidate?
 
   ;; Other
-  (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
+  (lsp-completion-provider :none) ; Use corfu instead for lsp completions
 
-  :config
-  (global-corfu-mode)
+  :config (global-corfu-mode)
   ;; (corfu-popupinfo-mode) TODO loading of extensions in :elpaca doesn't seem to work
   ;; Enable Corfu more generally for every minibuffer, as long as no other
   ;; completion UI is active. If you use Mct or Vertico as your main minibuffer
@@ -335,72 +426,79 @@
   ;; https://github.com/minad/corfu#completing-with-corfu-in-the-minibuffer
   (defun corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico/Mct are not active."
-    (unless (or (bound-and-true-p mct--active) ; Useful if I ever use MCT
-                (bound-and-true-p vertico--input))
-      (setq-local corfu-auto nil)       ; Ensure auto completion is disabled
+    (unless (or
+             (bound-and-true-p mct--active) ; Useful if I ever use MCT
+             (bound-and-true-p vertico--input))
+      (setq-local corfu-auto nil) ; Ensure auto completion is disabled
       (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer
+            1)
 
   ;; Setup lsp to use corfu for lsp completion
   (defun kb/corfu-setup-lsp ()
     "Use orderless completion style with lsp-capf instead of the
 default lsp-passthrough."
-    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+    (setf (alist-get
+           'styles
+           (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))))
 
 ;; TODO this should be possible from the corfu use-package
-(elpaca nil (progn
-	      (add-to-list 'load-path "/home/mav/neo/elpaca/builds/corfu/extensions")
-	      (require 'corfu-popupinfo)
-	      (setq corfu-popupinfo-delay '(1.0 . 0.3))
+(elpaca
+ nil
+ (progn
+   (add-to-list
+    'load-path "/home/mav/neo/elpaca/builds/corfu/extensions")
+   (require 'corfu-popupinfo)
+   (setq corfu-popupinfo-delay '(1.0 . 0.3))
 
-	      (corfu-popupinfo-mode)
-	      (require 'corfu-history)
-	      (corfu-history-mode)))
+   (corfu-popupinfo-mode)
+   (require 'corfu-history)
+   (corfu-history-mode)))
 
 (neo/use-package kind-icon
   :after corfu
   :custom
   (kind-icon-use-icons t)
   (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
-  (kind-icon-blend-background nil)  ; Use midpoint color between foreground and background colors ("blended")?
+  (kind-icon-blend-background nil) ; Use midpoint color between foreground and background colors ("blended")?
   (kind-icon-blend-frac 0.08)
 
   ;; NOTE 2022-02-05: `kind-icon' depends `svg-lib' which creates a cache
   ;; directory that defaults to the `user-emacs-directory'. Here, I change that
   ;; directory to a location appropriate to `no-littering' conventions, a
   ;; package which moves directories of other packages to sane locations.
-;  (svg-lib-icons-dir (no-littering-expand-var-file-name "svg-lib/cache/")) ; Change cache dir
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+  ;  (svg-lib-icons-dir (no-littering-expand-var-file-name "svg-lib/cache/")) ; Change cache dir
+  :config (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
-  ;; ;; Add hook to reset cache so the icon colors match my theme
-  ;; ;; NOTE 2022-02-05: This is a hook which resets the cache whenever I switch
-  ;; ;; the theme using my custom defined command for switching themes. If I don't
-  ;; ;; do this, then the backgound color will remain the same, meaning it will not
-  ;; ;; match the background color corresponding to the current theme. Important
-  ;; ;; since I have a light theme and dark theme I switch between. This has no
-  ;; ;; function unless you use something similar
-  ;; (add-hook 'kb/themes-hooks #'(lambda () (interactive) (kind-icon-reset-cache))))
+;; ;; Add hook to reset cache so the icon colors match my theme
+;; ;; NOTE 2022-02-05: This is a hook which resets the cache whenever I switch
+;; ;; the theme using my custom defined command for switching themes. If I don't
+;; ;; do this, then the backgound color will remain the same, meaning it will not
+;; ;; match the background color corresponding to the current theme. Important
+;; ;; since I have a light theme and dark theme I switch between. This has no
+;; ;; function unless you use something similar
+;; (add-hook 'kb/themes-hooks #'(lambda () (interactive) (kind-icon-reset-cache))))
 
 (neo/use-package cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("C-c p p" . completion-at-point) ;; capf
-         ("C-c p t" . complete-tag)        ;; etags
-         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("C-c p h" . cape-history)
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-symbol)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p \\" . cape-tex)
-         ("C-c p _" . cape-tex)
-         ("C-c p ^" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
+  :bind
+  (("C-c p p" . completion-at-point) ;; capf
+   ("C-c p t" . complete-tag) ;; etags
+   ("C-c p d" . cape-dabbrev) ;; or dabbrev-completion
+   ("C-c p h" . cape-history)
+   ("C-c p f" . cape-file)
+   ("C-c p k" . cape-keyword)
+   ("C-c p s" . cape-symbol)
+   ("C-c p a" . cape-abbrev)
+   ("C-c p l" . cape-line)
+   ("C-c p w" . cape-dict)
+   ("C-c p \\" . cape-tex)
+   ("C-c p _" . cape-tex)
+   ("C-c p ^" . cape-tex)
+   ("C-c p &" . cape-sgml)
+   ("C-c p r" . cape-rfc1345))
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   ;; NOTE: The order matters!
@@ -427,7 +525,8 @@ default lsp-passthrough."
   (yas-global-mode t)
   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets"))
   :hook
-  (emacs-startup . (lambda () (yas-load-directory "/home/mav/neo/snippets"))))
+  (emacs-startup
+   . (lambda () (yas-load-directory "/home/mav/neo/snippets"))))
 
 (neo/use-package yasnippet-snippets
   :doc "A library of sippets")
@@ -442,8 +541,7 @@ default lsp-passthrough."
         (erase-buffer)
         (yas-minor-mode)
         (yas-expand-snippet snippet-body)
-        (org-mode)
-        )))
+        (org-mode))))
 
 
 ;;;-----------------------------------------------------------------------------------
@@ -451,18 +549,17 @@ default lsp-passthrough."
 
 ;;; Note: some appearence settings happen in early-init.el in order to minimize flashing/flickering on startup.
 
-(neo/use-package all-the-icons :config (neo/maybe-install-fonts))
+(neo/use-package all-the-icons
+  :config (neo/maybe-install-fonts))
 
 (neo/use-package all-the-icons-completion
   :after (marginalia all-the-icons)
   :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-  :init
-  (all-the-icons-completion-mode))
+  :init (all-the-icons-completion-mode))
 
 ;;; give a bit more breathing room around windows
 (modify-all-frames-parameters
- '((right-divider-width . 40)
-   (internal-border-width . 40)))
+ '((right-divider-width . 40) (internal-border-width . 40)))
 
 ;; TODO this slows down terribly switching and saving buffers, or so it seems; wasn't the case w/ my previous config
 ;; (dolist (buffer-re '("\\*compilation\\*" "\\*system-packages\\*" "\\*Warnings\\*" "\\*Messages\\*"))
@@ -510,9 +607,10 @@ default lsp-passthrough."
 
 (neo/use-package popper
   :doc "Treat some buffers as 'popup' so that they stay out of the way"
-  :bind (("C-`"   . popper-toggle-latest)
-         ("M-`"   . popper-cycle)
-         ("C-M-`" . popper-toggle-type))
+  :bind
+  (("C-`" . popper-toggle-latest)
+   ("M-`" . popper-cycle)
+   ("C-M-`" . popper-toggle-type))
   :init
   (setq popper-reference-buffers
         '("\\*Messages\\*"
@@ -521,17 +619,17 @@ default lsp-passthrough."
           help-mode
           compilation-mode))
   (popper-mode +1)
-  (popper-echo-mode +1))                ; For echo area hints
+  (popper-echo-mode +1)) ; For echo area hints
 
 (neo/use-package emojify
-      :custom (emojify-emojis-dir (neo/litter-directory "emojis" emacs-version))
-      :config (if (display-graphic-p)
-                   (setq emojify-display-style 'image)
-                 (setq emojify-display-style 'unicode)
-                 )
-                 (setq emojify-emoji-set "emojione-v2.2.6")
+  :custom (emojify-emojis-dir (neo/litter-directory "emojis" emacs-version))
+  :config
+  (if (display-graphic-p)
+      (setq emojify-display-style 'image)
+    (setq emojify-display-style 'unicode))
+  (setq emojify-emoji-set "emojione-v2.2.6")
   ;               (setq emojify-emoji-set "openmoji-v13-0")
-                 :init (global-emojify-mode 1))
+  :init (global-emojify-mode 1))
 
 (neo/use-package all-the-icons-dired
   :after all-the-icons
@@ -542,25 +640,32 @@ default lsp-passthrough."
 
 ;;; TODO: not sure this still work
 (neo/use-package centered-window
-  :custom
-  (cwm-centered-window-width 100))
+  :custom (cwm-centered-window-width 100))
 
 ;;; TODO: not sure I want this
 (neo/use-package beacon
   :disabled
-  :config
-  (beacon-mode))
+  :config (beacon-mode))
 
 ;;; Fonts
 
 
 (defun neo/display-geometry ()
-  (mapcar #'string-to-number (split-string (shell-command-to-string command) " " t "[ ]+")))
+  (mapcar
+   #'string-to-number
+   (split-string (shell-command-to-string command) " " t "[ ]+")))
 
 (defun neo/set-fonts ()
-   ;;; height here is in 1/10 of a pt. 10pt is 3.528mm. Not much make sense here. My laptop has ~266dpi in both X and Y.
-  (set-face-attribute 'default nil :font "Ubuntu Mono" :height 100 :weight 'regular)
-  (set-face-attribute 'font-lock-comment-face nil :font "Chivo Mono" :height 1.0 :weight 'regular :slant 'italic)
+  ;;; height here is in 1/10 of a pt. 10pt is 3.528mm. Not much make sense here. My laptop has ~266dpi in both X and Y.
+  (set-face-attribute 'default nil
+                      :font "Ubuntu Mono"
+                      :height 100
+                      :weight 'regular)
+  (set-face-attribute 'font-lock-comment-face nil
+                      :font "Chivo Mono"
+                      :height 1.0
+                      :weight 'regular
+                      :slant 'italic)
   (set-face-attribute 'variable-pitch nil :family "Linux Libertine") ; Ubuntu ans ET Book
   )
 
@@ -573,7 +678,8 @@ default lsp-passthrough."
 (neo/use-package dracula-theme)
 (neo/use-package modus-themes
   :config
-  (setq modus-themes-syntax (list 'yellow-comments 'green-strings 'alt-syntax))
+  (setq modus-themes-syntax
+        (list 'yellow-comments 'green-strings 'alt-syntax))
   (setq modus-themes-org-blocks 'tinted-background))
 (neo/use-package molokai-theme)
 (neo/use-package twilight-theme)
@@ -582,14 +688,16 @@ default lsp-passthrough."
 
 (elpaca-wait)
 
-(defvar neo/current-theme 'doom-tomorrow-day "Theme applied")
+(defvar neo/current-theme 'doom-tomorrow-day
+  "Theme applied")
 (push 'neo/current-theme desktop-globals-to-save)
 
 (defun neo/load-theme ()
   (interactive)
   (neo/load-theme-internal
-   (completing-read "Load custom theme: " (mapcar 'symbol-name
-                                                  (custom-available-themes)))))
+   (completing-read
+    "Load custom theme: "
+    (mapcar 'symbol-name (custom-available-themes)))))
 
 ;;; need to do something for powerline and other modelines
 (defun neo/load-theme-action (x)
@@ -610,7 +718,10 @@ default lsp-passthrough."
   (call-process-shell-command "xrdb -load ~/.Xdefaults" nil 0))
 
 (defun neo/load-theme-internal (theme)
-  (let ((theme (if (stringp theme) (intern theme) theme)))
+  (let ((theme
+         (if (stringp theme)
+             (intern theme)
+           theme)))
     (message "Loading theme %s (disabling others)" theme)
     (mapc #'disable-theme custom-enabled-themes)
     (setq neo/current-theme theme)
@@ -625,21 +736,22 @@ default lsp-passthrough."
 ;      (set-face-foreground 'org-hide (face-attribute 'default :background))))
 
 (defun neo/set-divider-faces ()
-    ;; NOTE: the face names are for some reason displayed using the face itself.
-    ;; so if you see nothing in the dolist below is because we set the foreground to match the
-    ;; default background. This makes space between windows nicer and code here invisible
-    ;; Toggle highlight-quoted-mode to see the actual names.
-    ;; TODO: highlight-quoted-mode doesn't seem to be who does this.
-    (dolist (face '(window-divider
-                    window-divider-first-pixel
-                    window-divider-last-pixel))
-      (face-spec-reset-face face)
-      (set-face-foreground face (face-attribute 'default :background)))
+  ;; NOTE: the face names are for some reason displayed using the face itself.
+  ;; so if you see nothing in the dolist below is because we set the foreground to match the
+  ;; default background. This makes space between windows nicer and code here invisible
+  ;; Toggle highlight-quoted-mode to see the actual names.
+  ;; TODO: highlight-quoted-mode doesn't seem to be who does this.
+  (dolist (face
+           '(window-divider
+             window-divider-first-pixel window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
 
   (set-face-background 'fringe (face-attribute 'default :background)))
 
-(add-hook 'desktop-after-read-hook (lambda ()
-				     (neo/load-theme-internal neo/current-theme)))
+(add-hook
+ 'desktop-after-read-hook
+ (lambda () (neo/load-theme-internal neo/current-theme)))
 
 ;;; Misc
 
@@ -655,21 +767,25 @@ default lsp-passthrough."
 ;;; Movement
 
 (neo/use-package ace-jump-mode
-  :chords (("jj" . ace-jump-char-mode)
-           ("jk" . ace-jump-word-mode)
-           ("jl" . ace-jump-line-mode)))
+  :chords
+  (("jj" . ace-jump-char-mode)
+   ("jk" . ace-jump-word-mode)
+   ("jl" . ace-jump-line-mode)))
 
 (neo/use-package ace-window
-  :bind
-  ("C-x o" . ace-window)
-  :chords
-  (("''" . ace-window))
+  :bind ("C-x o" . ace-window)
+  :chords (("''" . ace-window))
   :custom-face
   ;; foreground should be computed from current theme, preserved the same way across restarts and
   ;; restored.
   ;; font is https://www.1001fonts.com/download/font/faster-one.regular.ttf
-  (aw-leading-char-face ((t (:inherit ace-jump-face-foreground
-                                      :font "FasterOne" :height 3.0 :foreground "dark gray" )))))
+  (aw-leading-char-face
+   ((t
+     (:inherit
+      ace-jump-face-foreground
+      :font "FasterOne"
+      :height 3.0
+      :foreground "dark gray")))))
 
 
 ;;;-----------------------------------------------------------------------------------
@@ -677,13 +793,16 @@ default lsp-passthrough."
 
 (defun neo/help-mode-faces (background)
   "Buffer-local face remapping for help buffers."
-  (face-remap-add-relative 'default
-                           :background background
-                           :foreground "black"))
+  (face-remap-add-relative
+   'default
+   :background background
+   :foreground "black"))
 
-(add-hook 'Info-mode-hook (lambda () (neo/help-mode-faces "light steel blue")))
+(add-hook
+ 'Info-mode-hook (lambda () (neo/help-mode-faces "light steel blue")))
 (add-hook 'help-mode-hook (lambda () (neo/help-mode-faces "thistle")))
-(add-hook 'helpful-mode-hook (lambda () (neo/help-mode-faces "thistle")))
+(add-hook
+ 'helpful-mode-hook (lambda () (neo/help-mode-faces "thistle")))
 
 ;; not really from here`
 (add-hook 'magit-mode-hook (lambda () (neo/help-mode-faces "azure1")))
@@ -696,32 +815,41 @@ default lsp-passthrough."
 
 (neo/use-package bug-reference-github
   :init
-  (setq bug-reference-bug-regexp "\\(\\b\\(?:[Bb]ug ?#?\\|[Pp]atch ?#\\|[Ii]ssue ?#?\\|RFE ?#\\|PR [a-z+-]+/\\)\\([0-9]+\\(?:#[0-9]+\\)?\\)\\)")
-  :hook
-  (prog-mode . bug-reference-github-set-url-format))
+  (setq
+   bug-reference-bug-regexp
+   "\\(\\b\\(?:[Bb]ug ?#?\\|[Pp]atch ?#\\|[Ii]ssue ?#?\\|RFE ?#\\|PR [a-z+-]+/\\)\\([0-9]+\\(?:#[0-9]+\\)?\\)\\)")
+  :hook (prog-mode . bug-reference-github-set-url-format))
 
 (neo/use-package eglot
-  :ensure-system-package python3-pylsp clangd-15
+  :ensure-system-package
+  python3-pylsp
+  clangd-15
   :config
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-15")))
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd-15")))
 
   (setq-default eglot-workspace-configuration
-                '((:pylsp . (
-			     :configurationSources ["flake8"]
-						   :plugins (:pycodestyle (:enabled nil)
-									  :mccabe (:enabled nil) :flake8 (:enabled t))))
-;		  (:gopls . (:verboseOutput t))
-		  ))
+                '((:pylsp
+                   .
+                   (:configurationSources
+                    ["flake8"]
+                    :plugins
+                    (:pycodestyle
+                     (:enabled nil)
+                     :mccabe (:enabled nil)
+                     :flake8 (:enabled t))))
+                  ;		  (:gopls . (:verboseOutput t))
+                  ))
 
-  :bind (("C-c l c" . eglot-reconnect)
-         ("C-c l d" . flymake-show-buffer-diagnostics)
-         ("C-c l f f" . eglot-format)
-         ("C-c l f b" . eglot-format-buffer)
-         ("C-c l l" . eglot)
-         ("C-c l r n" . eglot-rename)
-         ("C-c l s" . eglot-shutdown))
+  :bind
+  (("C-c l c" . eglot-reconnect)
+   ("C-c l d" . flymake-show-buffer-diagnostics)
+   ("C-c l f f" . eglot-format)
+   ("C-c l f b" . eglot-format-buffer)
+   ("C-c l l" . eglot)
+   ("C-c l r n" . eglot-rename)
+   ("C-c l s" . eglot-shutdown))
   :hook
   ((python-mode . eglot-ensure)
    (go-mode . eglot-ensure)
@@ -735,23 +863,30 @@ default lsp-passthrough."
   (unless (eglot--server-capable :codeActionProvider)
     (eglot--error "Server can't execute code actions!"))
   (let* ((server (eglot--current-server-or-lose))
-         (actions (jsonrpc-request
-                   server
-                   :textDocument/codeAction
-                   (list :textDocument (eglot--TextDocumentIdentifier))))
-         (action (cl-find-if
-                  (jsonrpc-lambda (&key kind &allow-other-keys)
-                    (string-equal kind "source.organizeImports" ))
-                  actions)))
+         (actions
+          (jsonrpc-request
+           server
+           :textDocument/codeAction
+           (list :textDocument (eglot--TextDocumentIdentifier))))
+         (action
+          (cl-find-if
+           (jsonrpc-lambda
+            (&key kind &allow-other-keys)
+            (string-equal kind "source.organizeImports"))
+           actions)))
     (when action
-      (eglot--dcase action
-        (((Command) command arguments)
-          (eglot-execute-command server (intern command) arguments))
-        (((CodeAction) edit command)
-          (when edit (eglot--apply-workspace-edit edit))
-          (when command
-            (eglot--dbind ((Command) command arguments) command
-              (eglot-execute-command server (intern command) arguments))))))))
+      (eglot--dcase
+       action
+       (((Command) command arguments)
+        (eglot-execute-command server (intern command) arguments))
+       (((CodeAction) edit command)
+        (when edit
+          (eglot--apply-workspace-edit edit))
+        (when command
+          (eglot--dbind
+           ((Command) command arguments) command
+           (eglot-execute-command
+            server (intern command) arguments))))))))
 
 ;; (defun eglot-organize-imports-on-save ()
 ;;   (defun eglot-organize-imports-nosignal ()
@@ -770,7 +905,8 @@ default lsp-passthrough."
 ;(add-hook 'before-save-hook 'neo/eglot-organize-imports nil t)
 ;(add-hook 'before-save-hook 'eglot-format-buffer)
 
-(defvar neo/treesit-grammar-dir (expand-file-name "tree-sitter/" no-littering-var-directory))
+(defvar neo/treesit-grammar-dir
+  (expand-file-name "tree-sitter/" no-littering-var-directory))
 (make-directory neo/treesit-grammar-dir t)
 
 (setq treesit-extra-load-path (list neo/treesit-grammar-dir))
@@ -779,7 +915,9 @@ default lsp-passthrough."
 ;;; we want grammar in .litter directories, hence this piece of advice.
 (defun neo/treesit-add-outdir (orig-fun program &rest args)
   (apply orig-fun neo/treesit-grammar-dir args))
-(advice-add 'treesit--install-language-grammar-1 :around #'neo/treesit-add-outdir)
+(advice-add
+ 'treesit--install-language-grammar-1
+ :around #'neo/treesit-add-outdir)
 
 (setq treesit-font-lock-level 4)
 
@@ -793,7 +931,8 @@ default lsp-passthrough."
   :elpaca nil
   :ensure nil
   :config
-  (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter")))
+  (setq treesit-extra-load-path
+        (list (no-littering-expand-var-file-name "tree-sitter")))
   ;; (push '(css-mode . css-ts-mode) major-mode-remap-alist)
   ;; (push '(python-mode . python-ts-mode) major-mode-remap-alist)
   ;; (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
@@ -808,8 +947,7 @@ default lsp-passthrough."
 (neo/use-package doc-show-inline
   :commands (doc-show-inline-mode)
 
-  :config
-  (define-key c++-mode-map (kbd "C-;") 'doc-show-inline-mode)
+  :config (define-key c++-mode-map (kbd "C-;") 'doc-show-inline-mode)
 
   :hook (c++-mode . doc-show-inline-mode))
 
@@ -833,8 +971,7 @@ default lsp-passthrough."
 ;;; Dev/Version Control
 
 (neo/use-package magit
-  :config
-  (setq magit-save-repository-buffers 'dontask)
+  :config (setq magit-save-repository-buffers 'dontask)
   :custom
   (magit-list-refs-sortby "-creatordate") ; doesn't seem to have any effect
   (magit-refs-show-commit-count 'branch) ; may be too expsive
@@ -845,26 +982,25 @@ default lsp-passthrough."
   ;; TODO: find the right place for magit-insert-branch-description (might also be
   ;; useful in magit-refs-sections-hook)
   (setq magit-status-sections-hook
-	'(magit-insert-status-headers
-	  magit-insert-merge-log
-	  magit-insert-rebase-sequence
-	  magit-insert-am-sequence
-	  magit-insert-sequencer-sequence
-	  magit-insert-bisect-output
-	  magit-insert-bisect-rest
-	  magit-insert-bisect-log
-	  magit-insert-untracked-files
-	  magit-insert-unstaged-changes
-	  magit-insert-staged-changes
-	  magit-insert-stashes
-	  magit-insert-unpushed-to-pushremote
-	  magit-insert-unpushed-to-upstream-or-recent
-	  magit-insert-unpulled-from-pushremote
-	  magit-insert-unpulled-from-upstream
-	  magit-insert-modules
-	  magit-insert-local-branches))
-  :chords
-  (("`g" . magit-status))
+        '(magit-insert-status-headers
+          magit-insert-merge-log
+          magit-insert-rebase-sequence
+          magit-insert-am-sequence
+          magit-insert-sequencer-sequence
+          magit-insert-bisect-output
+          magit-insert-bisect-rest
+          magit-insert-bisect-log
+          magit-insert-untracked-files
+          magit-insert-unstaged-changes
+          magit-insert-staged-changes
+          magit-insert-stashes
+          magit-insert-unpushed-to-pushremote
+          magit-insert-unpushed-to-upstream-or-recent
+          magit-insert-unpulled-from-pushremote
+          magit-insert-unpulled-from-upstream
+          magit-insert-modules
+          magit-insert-local-branches))
+  :chords (("`g" . magit-status))
   :bind
   ;; on my laptop, function keys are often disabled in favor of media key
   ;; so binding to <f12> is not good. Do something about it
@@ -872,9 +1008,15 @@ default lsp-passthrough."
   ("<f12> g" . 'counsel-git-grep))
 
 
-(neo/use-package forge :after magit
+(neo/use-package forge
+  :after magit
   :config
-  (add-to-list 'forge-alist '("kaspar4.github.com" "api.github.com" "github.com" forge-github-repository)))
+  (add-to-list
+   'forge-alist
+   '("kaspar4.github.com"
+     "api.github.com"
+     "github.com"
+     forge-github-repository)))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Elisp
@@ -884,16 +1026,14 @@ default lsp-passthrough."
 (neo/use-package macrostep)
 
 (neo/use-package highlight-defined
-  :custom
-  (highlight-defined-face-use-itself t)
+  :custom (highlight-defined-face-use-itself t)
   :hook
   (help-mode . highlight-defined-mode)
   (emacs-lisp-mode . highlight-defined-mode))
 
 (neo/use-package highlight-quoted
   :doc "Package that, among other things, displays face names using the face itself TODO: doesn't seem true"
-  :hook
-  (emacs-lisp-mode . highlight-quoted-mode))
+  :hook (emacs-lisp-mode . highlight-quoted-mode))
 
 (neo/use-package lispy)
 
@@ -901,24 +1041,30 @@ default lsp-passthrough."
   "Like `eval-expression', but also inspect when called with prefix ARG."
   (interactive "P")
   (pcase arg
-    ('(4) (let ((current-prefix-arg nil))
-	    (call-interactively #'inspector-inspect-expression)))
+    ('(4)
+     (let ((current-prefix-arg nil))
+       (call-interactively #'inspector-inspect-expression)))
     (_ (call-interactively #'eval-expression))))
 
 (defun neo/eval-or-inspect-last-sexp (arg)
-   "Like `eval-last-sexp', but also inspect when called with prefix ARG."
-   (interactive "P")
-   (pcase arg
-     ('(4) (inspector-inspect-last-sexp))
-     (_ (call-interactively #'eval-last-sexp))))
+  "Like `eval-last-sexp', but also inspect when called with prefix ARG."
+  (interactive "P")
+  (pcase arg
+    ('(4) (inspector-inspect-last-sexp))
+    (_ (call-interactively #'eval-last-sexp))))
 
 (neo/use-package inspector
   :config
   (progn
-    (define-key global-map [remap eval-last-sexp] #'neo/eval-or-inspect-last-sexp)
-    (define-key global-map [remap eval-expression] #'neo/eval-or-inspect-expression)))
+    (define-key
+     global-map
+     [remap eval-last-sexp]
+     #'neo/eval-or-inspect-last-sexp)
+    (define-key
+     global-map
+     [remap eval-expression]
+     #'neo/eval-or-inspect-expression)))
 
-;;; TODO: M-x elisp-autofmt-buffer is ok, but formatting on save doesn't work.
 (neo/use-package elisp-autofmt
   :commands (elisp-autofmt-mode elisp-autofmt-buffer)
   :hook (emacs-lisp-mode . elisp-autofmt-mode))
@@ -944,8 +1090,7 @@ default lsp-passthrough."
   :config
   (defun terraform-mode-init ()
     (outline-minor-mode 1))
-  :hook
-  (terraform-mode . terraform-mode-init))
+  :hook (terraform-mode . terraform-mode-init))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Protobuf
@@ -967,13 +1112,12 @@ default lsp-passthrough."
   :config
   (setq gofmt-command "goimports")
   (add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
-  :hook
-  ((go-mode . neo/setup_go)))
+  :hook ((go-mode . neo/setup_go)))
 
 (setq-default eglot-workspace-configuration
-	      '((:gopls .
-			((staticcheck . t)
-			 (matcher . "CaseSensitive")))))
+              '((:gopls
+                 .
+                 ((staticcheck . t) (matcher . "CaseSensitive")))))
 
 
 ;;; requires go install  github.com/cweill/gotests/...@latest
@@ -991,24 +1135,27 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Latex
 
-(defvar neo/latex-nofill-env '("equation"
-                               "equation*"
-                               "align"
-                               "align*"
-                               "tabular"
-                               "tabular*"
-                               "tabu"
-                               "tabu*"
-                               "tikzpicture"))
+(defvar neo/latex-nofill-env
+  '("equation"
+    "equation*"
+    "align"
+    "align*"
+    "tabular"
+    "tabular*"
+    "tabu"
+    "tabu*"
+    "tikzpicture"))
 
 (defun neo/autofill ()
   (let ((do-auto-fill t)
         (current-environment "")
         (level 0))
-    (while (and do-auto-fill (not (string= current-environment "document")))
-      (setq level (1+ level)
-            current-environment (LaTeX-current-environment level)
-            do-auto-fill (not (member current-environment neo/latex-nofill-env))))
+    (while (and do-auto-fill
+                (not (string= current-environment "document")))
+      (setq
+       level (1+ level)
+       current-environment (LaTeX-current-environment level)
+       do-auto-fill (not (member current-environment neo/latex-nofill-env))))
     (when do-auto-fill
       (do-auto-fill))))
 
@@ -1018,23 +1165,22 @@ default lsp-passthrough."
   (setq auto-fill-function 'neo/autofill))
 
 ;; Oh boy, this is something. Thanks god we could piggy back on the straight mirror. And still it was not obvious
-(neo/use-package tex :elpaca (tex :host github :repo "emacs-straight/auctex") :ensure auctex
+(neo/use-package tex
+  :elpaca (tex :host github :repo "emacs-straight/auctex")
+  :ensure auctex
   :hook
-  (
-   (LaTeX-mode-hook . #'neo/auto-fill-mode)
+  ((LaTeX-mode-hook . #'neo/auto-fill-mode)
    (LaTeX-mode-hook . #'LaTeX-math-mode)
-   (LaTeX-mode-hook .  #'TeX-source-correlate-mode)
+   (LaTeX-mode-hook . #'TeX-source-correlate-mode)
    (LaTeX-mode-hook . #'TeX-fold-mode)
    (LaTeX-mode-hook . #'TeX-PDF-mode)
    (LaTeX-mode-hook . #'latex-preview-pane-mode)
    (TeX-mode-hook . #'prettify-symbols-mode)
-   (LaTeX-section-hook .  #'LaTeX-section-label)
-   (LaTeX-mode-hook . (function turn-on-reftex))
-   ))
+   (LaTeX-section-hook . #'LaTeX-section-label)
+   (LaTeX-mode-hook . (function turn-on-reftex))))
 
 (neo/use-package latex-preview-pane
-  :config
-  (latex-preview-pane-enable))
+  :config (latex-preview-pane-enable))
 
 (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
 
@@ -1045,18 +1191,24 @@ default lsp-passthrough."
   (if (file-readable-p "~/neo/assets/hacker.png")
       (progn
         (setq dashboard-startup-banner "~/neo/assets/hacker.png")
-        (setq dashboard-banner-logo-title "W   E      A   R   E      L   E   G   I   O   N   S")
-        (set-face-attribute 'dashboard-banner-logo-title nil :font "Orbitron" :height 200 :weight 'bold :foreground "#196DB5"))
+        (setq dashboard-banner-logo-title
+              "W   E      A   R   E      L   E   G   I   O   N   S")
+        (set-face-attribute 'dashboard-banner-logo-title nil
+                            :font "Orbitron"
+                            :height 200
+                            :weight 'bold
+                            :foreground "#196DB5"))
     (setq dashboard-startup-banner 'logo)
     (setq dashboard-banner-logo-title "Welcome to Emacs Neo")))
 
-  ;; )
+;; )
 
 (neo/use-package dashboard-hackernews
-  :elpaca (dashboard-hackernews :host github :repo "hyakt/emacs-dashboard-hackernews")
-  :config
-  (require 'json))
-
+  :elpaca
+  (dashboard-hackernews
+   :host github
+   :repo "hyakt/emacs-dashboard-hackernews")
+  :config (require 'json))
 
 
 ;; TODO: no idea why this doesn't work. The hook seems invoked in the right buffer.
@@ -1065,18 +1217,26 @@ default lsp-passthrough."
     (setq cursor-type nil)))
 
 (defun neo/dashboard-setup-startup-hook ()
-   (add-hook 'window-setup-hook (lambda ()
-                                   ;; 100 means `dashboard-resize-on-hook' will run last
-                                   (add-hook 'window-size-change-functions 'dashboard-resize-on-hook 100)
-                                   (dashboard-resize-on-hook)) 100)
-    (add-hook 'after-init-hook (lambda ()
-                                 ;; Display useful lists of items
-                                 (dashboard-insert-startupify-lists)) 100)
-    (add-hook 'emacs-startup-hook (lambda ()
-                                    (switch-to-buffer dashboard-buffer-name)
-                                    (goto-char (point-min))
-                                    (redisplay)
-                                    (run-hooks 'dashboard-after-initialize-hook)) 100))
+  (add-hook 'window-setup-hook
+            (lambda ()
+              ;; 100 means `dashboard-resize-on-hook' will run last
+              (add-hook
+               'window-size-change-functions 'dashboard-resize-on-hook
+               100)
+              (dashboard-resize-on-hook))
+            100)
+  (add-hook 'after-init-hook
+            (lambda ()
+              ;; Display useful lists of items
+              (dashboard-insert-startupify-lists))
+            100)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (switch-to-buffer dashboard-buffer-name)
+              (goto-char (point-min))
+              (redisplay)
+              (run-hooks 'dashboard-after-initialize-hook))
+            100))
 
 (defun neo/fortune ()
   (when (executable-find "fortune")
@@ -1087,58 +1247,71 @@ default lsp-passthrough."
 (neo/use-package dashboard
   :after (dashboard-hackernews page-break-lines)
   :delight (dashboard-mode page-break-lines-mode)
-  :init
-  (setq dashboard-icon-type 'all-the-icons)
-;  (setq dashboard-set-heading-icons t)
+  :init (setq dashboard-icon-type 'all-the-icons)
+  ;  (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   :config
   (setq dashboard-center-content t)
   (setq dashboard-set-init-info t)
   (setq dashboard-set-navigator t)
-  (set-face-attribute 'dashboard-heading nil :height 1.1 :weight 'bold)
- ; (dashboard-modify-heading-icons '((recents . "nf-oct-file_text")
+  (set-face-attribute 'dashboard-heading nil
+                      :height 1.1
+                      :weight 'bold)
+  ; (dashboard-modify-heading-icons '((recents . "nf-oct-file_text")
   ;                                  (bookmarks . "nf-oct-book")))
   (setq dashboard-show-shortcuts nil)
-  (setq dashboard-items '((recents  . 5)
-                          (bookmarks . 5)
-                          (agenda . 5)))
-                                        ;                        (hackernews .10)))
+  (setq dashboard-items '((recents . 5) (bookmarks . 5) (agenda . 5)))
+  ;                        (hackernews .10)))
   (setq dashboard-set-navigator t)
   (setq dashboard-navigator-buttons
-      `(;; line1
-        ((,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-         " U N O"
-         "Browse homepage"
-         (lambda (&rest _) (browse-url "https://github.com/kaspar4/uno")))
-         (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-         " N E O"
-         "Browse homepage"
-         (lambda (&rest _) (browse-url "https://github.com/kaspar4/neo")))
-        ("★" "Star" "Show stars" (lambda (&rest _) (show-stars)) warning)
-        ("?" "" "?/h" #'show-help nil "<" ">"))
-         ;; line 2
-        ((,(all-the-icons-faicon "linkedin" :height 1.1 :v-adjust 0.0)
-          "Linkedin"
-          ""
-          (lambda (&rest _) (browse-url "https://www.linkedin.com/feed/")))
-         ("⚑" nil "Show flags" (lambda (&rest _) (message "flag")) error))))
+        `( ;; line1
+          ((,(all-the-icons-octicon
+              "mark-github"
+              :height 1.1
+              :v-adjust 0.0)
+            " U N O" "Browse homepage"
+            (lambda (&rest _)
+              (browse-url "https://github.com/kaspar4/uno")))
+           (,(all-the-icons-octicon
+              "mark-github"
+              :height 1.1
+              :v-adjust 0.0)
+            " N E O" "Browse homepage"
+            (lambda (&rest _)
+              (browse-url "https://github.com/kaspar4/neo")))
+           ("★"
+            "Star"
+            "Show stars"
+            (lambda (&rest _) (show-stars))
+            warning)
+           ("?" "" "?/h" #'show-help nil "<" ">"))
+          ;; line 2
+          ((,(all-the-icons-faicon
+              "linkedin"
+              :height 1.1
+              :v-adjust 0.0)
+            "Linkedin" ""
+            (lambda (&rest _)
+              (browse-url "https://www.linkedin.com/feed/")))
+           ("⚑"
+            nil
+            "Show flags"
+            (lambda (&rest _) (message "flag"))
+            error))))
   (setq dashboard-footer-messages (list (neo/fortune)))
 
   (neo/setup-logo)
-  (setq initial-buffer-choice #'(lambda () (get-buffer-create "*dashboard*")))
+  (setq initial-buffer-choice
+        #'(lambda () (get-buffer-create "*dashboard*")))
   (neo/dashboard-setup-startup-hook)
-  :hook
-  ((dashboard-after-initialize . neo/clear-cursor)))
+  :hook ((dashboard-after-initialize . neo/clear-cursor)))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Org
 
 (neo/use-package org-modern
-  :config
-  (setq org-startup-with-inline-images t)
-  :hook
-  (org-babel-after-execute . org-redisplay-inline-images)
-  )
+  :config (setq org-startup-with-inline-images t)
+  :hook (org-babel-after-execute . org-redisplay-inline-images))
 
 (elpaca-wait)
 
@@ -1149,16 +1322,13 @@ default lsp-passthrough."
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((mermaid . t)
-     (ditaa . t)
-     (shell . t)
-     (dot . t)
-     (scheme . t)))
+   '((mermaid . t) (ditaa . t) (shell . t) (dot . t) (scheme . t)))
   (setq org-confirm-babel-evaluate nil)
   (defun neo/org-confirm-babel-evaluate (lang body)
     (not (string= lang "mermaid")))
   ;; Fix for including SVGs
-  (setq org-latex-pdf-process
+  (setq
+   org-latex-pdf-process
    '("%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
      "bibtex %b"
      "%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
@@ -1185,14 +1355,13 @@ default lsp-passthrough."
    org-agenda-time-grid
    '((daily today require-timed)
      (800 1000 1200 1400 1600 1800 2000)
-     " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-   org-agenda-current-time-string
-   "⭠ now ─────────────────────────────────────────────────")
+     " ┄┄┄┄┄ "
+     "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+   org-agenda-current-time-string "⭠ now ─────────────────────────────────────────────────")
   (global-org-modern-mode))
 
 (neo/use-package org-tidy
-  :config
-  (add-hook 'org-mode-hook #'org-tidy-mode))
+  :config (add-hook 'org-mode-hook #'org-tidy-mode))
 
 ;;; TODO: once we setup agenda and todo list, use this to show agenda items on the side
 (neo/use-package org-sidebar)
@@ -1231,9 +1400,11 @@ default lsp-passthrough."
   :custom
   (vterm-toggle-fullscreen-p t)
   (vterm-toggle-scope 'project)
-  :bind (("s-t" . #'vterm-toggle)
-         :map vterm-mode-map
-         ("s-t" . #'vterm-toggle)))
+  :bind
+  (("s-t" . #'vterm-toggle)
+   :map
+   vterm-mode-map
+   ("s-t" . #'vterm-toggle)))
 
 (neo/use-package eshell-vterm)
 
@@ -1241,14 +1412,15 @@ default lsp-passthrough."
 ;;; App/Kubernetes
 
 (neo/use-package kubernetes
-    :commands (kubernetes-overview))
+  :commands (kubernetes-overview))
 
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Fun
 
 (neo/use-package xkcd)
-(neo/use-package tetris :elpaca nil)
+(neo/use-package tetris
+  :elpaca nil)
 (neo/use-package autotetris-mode)
 (neo/use-package selectric-mode)
 
