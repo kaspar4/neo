@@ -1196,18 +1196,20 @@ default lsp-passthrough."
 ;;; App/Dashboard
 
 (defun neo/setup-logo ()
-  (if (file-readable-p "~/neo/assets/hacker.png")
-      (progn
-        (setq dashboard-startup-banner "~/neo/assets/hacker.png")
-        (setq dashboard-banner-logo-title
-              "W   E      A   R   E      L   E   G   I   O   N   S")
-        (set-face-attribute 'dashboard-banner-logo-title nil
-                            :font "Orbitron"
-                            :height 200
-                            :weight 'bold
-                            :foreground "#196DB5"))
-    (setq dashboard-startup-banner 'logo)
-    (setq dashboard-banner-logo-title "Welcome to Emacs Neo")))
+  (let ((image
+         (expand-file-name "assets/hacker.png" user-emacs-directory)))
+    (if (file-readable-p image)
+        (progn
+          (setq dashboard-startup-banner image)
+          (setq dashboard-banner-logo-title
+                "W   E      A   R   E      L   E   G   I   O   N   S")
+          (set-face-attribute 'dashboard-banner-logo-title nil
+                              :font "Orbitron"
+                              :height 200
+                              :weight 'bold
+                              :foreground "#196DB5"))
+      (setq dashboard-startup-banner 'logo)
+      (setq dashboard-banner-logo-title "Welcome to Emacs Neo"))))
 
 (neo/use-package dashboard-hackernews
   :elpaca
