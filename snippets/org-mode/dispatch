@@ -1,0 +1,37 @@
+# -*- mode: snippet -*-
+# name: dispatch
+# key: dispatch
+# --
+
+:PROPERTIES:
+Status:  ${2:$$(yas-choose-value '("proposed" "accepted" "deprecated" "superseeded"))}
+:END:
+
+#+title: ${1:A Useful Summary}
+#+date: `(current-time-string)`
+#+author: `(user-full-name)`
+
+* Hugo Configuration  :noexport:
+  #+hugo_base_dir: ../
+  #+hugo_section: ./dispatches
+  #+hugo_weight: 2001
+  #+hugo_auto_set_lastmod: t
+  #+hugo_tags: hugo org
+  #+hugo_categories: dispatch
+  #+hugo_menu: :menu "main" :weight 2001
+  #+hugo_custom_front_matter: :foo bar :baz zoo :alpha 1 :beta "two words" :gamma 10
+  #+hugo_auto_set_lastmod: t
+  #+hugo_draft: true
+
+* Context
+  /a value-neutral description of the forces at play/
+
+* Decision
+  /The decision made, it should begin with 'We will...' or 'We have agreed to ..../
+
+* Rationale
+  /the reasoning behind the decision. Here we can spend some more words without weakening or adding confusion to the decision/
+
+* Consequences
+  /The resulting context, after having applied the decision./
+
