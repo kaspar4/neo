@@ -1209,8 +1209,6 @@ default lsp-passthrough."
     (setq dashboard-startup-banner 'logo)
     (setq dashboard-banner-logo-title "Welcome to Emacs Neo")))
 
-;; )
-
 (neo/use-package dashboard-hackernews
   :elpaca
   (dashboard-hackernews
