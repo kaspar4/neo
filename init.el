@@ -976,6 +976,9 @@ default lsp-passthrough."
   (magit-list-refs-sortby "-creatordate") ; doesn't seem to have any effect
   (magit-refs-show-commit-count 'branch) ; may be too expsive
   (magit-completing-read-function 'magit-builtin-completing-read)
+  (git-commit-summary-max-length 50)
+  (add-hook 'after-save-hook 'magit-after-save-refresh-status t)
+
   :init
   ;; NOTE: order of functions in this hook is important, we make this clear with setq
   ;; instead of gambling with add-hook. There's magit-add-section-hook that might be better.
@@ -1002,8 +1005,6 @@ default lsp-passthrough."
           magit-insert-local-branches))
   :chords (("`g" . magit-status))
   :bind
-  ;; on my laptop, function keys are often disabled in favor of media key
-  ;; so binding to <f12> is not good. Do something about it
   ("<f12> s" . 'magit-status)
   ("<f12> g" . 'counsel-git-grep))
 
@@ -1017,6 +1018,13 @@ default lsp-passthrough."
      "api.github.com"
      "github.com"
      forge-github-repository)))
+
+;;; still problems with this dude, but since it only triggers when 'Fixes #' is inserted,
+;;; for now we keep it around
+(neo/use-package git-commit-insert-issue
+  :hook (git-commit-mode . git-commit-insert-issue-mode))
+
+(neo/use-package git-timemachine)
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Elisp
