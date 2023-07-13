@@ -463,7 +463,9 @@ default lsp-passthrough."
  nil
  (progn
    (add-to-list
-    'load-path "/home/mav/neo/elpaca/builds/corfu/extensions")
+    'load-path
+    (expand-file-name "elpaca/builds/corfu/extensions"
+                      user-emacs-directory))
    (require 'corfu-popupinfo)
    (setq corfu-popupinfo-delay '(1.0 . 0.3))
 
@@ -541,7 +543,7 @@ default lsp-passthrough."
   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets"))
   :hook
   (emacs-startup
-   . (lambda () (yas-load-directory "/home/mav/neo/snippets"))))
+   . (lambda () (yas-load-directory (expand-file-name "snippets" user-emacs-directory))))
 
 (neo/use-package yasnippet-snippets
   :doc "A library of sippets")
