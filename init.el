@@ -543,7 +543,7 @@ default lsp-passthrough."
   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets"))
   :hook
   (emacs-startup
-   . (lambda () (yas-load-directory (expand-file-name "snippets" user-emacs-directory))))
+   . (lambda () (yas-load-directory (expand-file-name "snippets" user-emacs-directory)))))
 
 (neo/use-package yasnippet-snippets
   :doc "A library of sippets")
