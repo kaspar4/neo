@@ -1,0 +1,32 @@
+---
+
+emacs_versions:
+  - version: 29
+    source: git
+    config:
+      - '--with-native-compilation=aot'
+      - '--with-rsvg'
+
+  - version: 29.0.91
+    source: git
+    config:
+      - '--with-native-compilation=aot'
+      - '--with-rsvg'
+
+  - version: 28.2
+    source: release
+    config:
+      - '--with-native-compilation'
+      - '--with-rsvg'
+
+  - version: 28.2
+    source: release
+    config:
+      - '--with-rsvg'
+
+  - version: 28.1
+    source: release
+
+  - version: 27.2
+    source: git
+    patch: sigstksz.patch

@@ -1,0 +1,126 @@
+---
+
+- name: Gather build parameters
+  set_fact:
+    emacs_version: "{{item.version}}"
+    source: "{{item.source}}"
+    config: '{{item.config|default([])}}'
+    patch: '{{item.patch|default("")}}'
+
+- name: Check for native compilation
+  set_fact:
+    config_options: "{{config|join(' ') if config is defined else ''}}"
+    native_compilation: "{{config|join('') is search('with-native-compilation')}}"
+
+- name: Define target dir
+  set_fact:
+    emacs_target_dir: "/usr/local/emacs/{{ 'emacs-' + emacs_version + ('-native'if native_compilation else '')}}"
+
+- name: Set Emacs base url (release candidates)
+  set_fact:
+    emacs_base_url: "https://alpha.gnu.org/gnu/emacs/pretest"
+    emacs_top_dir: "emacs-{{ emacs_version | regex_replace('^(.*)(-rc[0-9])$', '\\1') }}"
+  when: emacs_version | regex_search("^(.*)(-rc[0-9])$")
+
+- name: Set Emacs base url (official release)
+  set_fact:
+    emacs_base_url: "http://mirror.rit.edu/gnu/emacs"
+    emacs_top_dir: "emacs-{{emacs_version}}"
+  when: not emacs_version | regex_search("^(.*)(-rc[0-9])$")
+
+- name: Set Emacs tarfile
+  set_fact:
+    emacs_url: "{{emacs_base_url}}/emacs-{{emacs_version}}.tar.xz"
+
+# We shouldn't remove a directory when a Emacs using it is running
+- name: remove directory
+  ansible.builtin.file:
+    path: "/usr/local/emacs/emacs-HEAD"
+    state: absent
+  when: emacs_version == 'HEAD'
+
+- name: Check if a build is needed
+  stat:
+    path: "{{emacs_target_dir}}"
+  register: install_dir
+
+- name: Create temporary build directory
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: emacs-
+  register: source_dir
+  when: not install_dir.stat.exists
+
+- name: Set Emacs tarfile
+  set_fact:
+    emacs_build_dir: "{{source_dir.path}}/emacs_build"
+    emacs_source_dir: "{{source_dir.path}}/emacs_source"
+  when: not install_dir.stat.exists
+
+- name: Download
+  ansible.builtin.unarchive:
+    src: "{{emacs_url}}"
+    dest: "{{source_dir.path}}"
+    remote_src: true
+    extra_opts:
+      - --transform
+      - "s/^{{emacs_top_dir}}/emacs_source/"
+  when: not install_dir.stat.exists and source == 'release'
+
+- name: version
+  set_fact:
+    git_commitoid: "{{'master' if emacs_version == 'master' else 'emacs-{{emacs_version}}'}}"
+
+- name: Shallow clone from git at {{ emacs_version }}
+  ansible.builtin.git:
+    repo: 'https://git.savannah.gnu.org/git/emacs.git' # 'https://github.com/emacs-mirror/emacs.git'
+    dest: "{{source_dir.path}}/emacs_source"
+    single_branch: true
+    depth: 1
+    version: "{{ git_commitoid }}"
+  when: not install_dir.stat.exists and source == 'git'
+
+- name: autoconf
+  ansible.builtin.command:
+    cmd: "./autogen.sh"
+    chdir: "{{emacs_source_dir}}"
+  when: not install_dir.stat.exists and source == 'git'
+
+- name: patch
+  ansible.posix.patch:
+    src: "{{patch}}"
+    basedir: "{{emacs_source_dir}}/src"
+  when: not install_dir.stat.exists and patch != ''
+
+- name: Create build directory
+  ansible.builtin.file:
+    path: "{{emacs_build_dir}}"
+    state: directory
+    mode: '0755'
+  when: not install_dir.stat.exists
+
+- name: "Build {{emacs_version}}"
+  block:
+    - name: Configure
+      ansible.builtin.shell:
+        # CC is for native compilation. We should find it from distro
+        cmd: "CC=gcc-12 {{emacs_source_dir}}/configure --prefix {{emacs_target_dir}} {{config_options}}"
+        chdir: "{{emacs_build_dir}}"
+    - name: Bootstrap
+      ansible.builtin.command:
+        cmd: "make --jobs {{ansible_processor_vcpus}} bootstrap"
+        chdir: "{{emacs_build_dir}}"
+    - name: Build
+      ansible.builtin.command:
+        cmd: "make --jobs {{ansible_processor_vcpus}}"
+        chdir: "{{emacs_build_dir}}"
+    - name: install
+      ansible.builtin.command:
+        cmd: "make --jobs {{ansible_processor_vcpus}} install"
+        chdir: "{{emacs_build_dir}}"
+      become: true
+    - name: remove directory
+      ansible.builtin.file:
+        path: "{{source_dir.path}}"
+        state: absent
+  when: not install_dir.stat.exists

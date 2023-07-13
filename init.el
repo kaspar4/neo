@@ -233,6 +233,21 @@
 ;;;-----------------------------------------------------------------------------------
 ;;; Restart Emacs
 
+;;; This is for 28.2  compatibility
+;; (if (boundp 'restart-emacs)
+;;     (defun neo/restart-emacs ()
+;;       (restart-emacs)))
+;; (neo/use-package restart-emacs
+;;   :if (not (boundp 'restart-emacs))
+;;   :config
+;;   (defun neo/emacs-args ()
+;;     (with-temp-buffer
+;;       (insert-file-contents "/proc/self/cmdline")
+;;       (split-string (buffer-string) "\0" t)))
+;;   (defun neo/restart-emacs ()
+;;     (restart-emacs (cdr (neo/emacs-args)))))
+;;; End of 28.2 compatibility
+
 (defun neo/sync-neo ()
   (message "We try to sync Emacs before restarting"))
 
