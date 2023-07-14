@@ -1039,6 +1039,14 @@ default lsp-passthrough."
 (neo/use-package forge
   :after magit
   :config
+  (setq forge-topic-list-columns
+        '(("#" 5 forge-topic-list-sort-by-number
+           ;           (lambda (a b) (> (car a) (car b)))
+           (:right-align t) number nil)
+          ("Title" 40 t nil title nil)
+          ("Milestone" 10 t nil milestone nil)
+          ("State" 10 t nil state nil)
+          ("Updated" 10 t nil updated nil)))
   (add-to-list
    'forge-alist
    '("kaspar4.github.com"
