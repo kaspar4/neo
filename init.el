@@ -2,6 +2,12 @@
 
 ;;; Code:
 
+;;; matching setting in early-init.el. This is here for bug-hunter
+(setq no-littering-etc-directory
+      (expand-file-name ".litter/config" user-emacs-directory))
+(setq no-littering-var-directory
+      (expand-file-name ".litter/data" user-emacs-directory))
+
 ;;;-----------------------------------------------------------------------------------
 ;;; Neo utilities
 
@@ -543,6 +549,7 @@ default lsp-passthrough."
   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets"))
   :hook
   (emacs-startup
+   .
    (lambda ()
      (yas-load-directory
       (expand-file-name "snippets" user-emacs-directory)))))

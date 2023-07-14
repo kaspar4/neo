@@ -20,6 +20,7 @@
 (push '(vertical-scroll-bars . 0) default-frame-alist)
 
 
+;;; matching setting in init.el
 (setq no-littering-etc-directory (expand-file-name ".litter/config" user-emacs-directory))
 (setq no-littering-var-directory (expand-file-name ".litter/data" user-emacs-directory))
 
