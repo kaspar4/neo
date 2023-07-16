@@ -665,6 +665,9 @@ default lsp-passthrough."
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
+(neo/use-package rainbow-mode
+  :config (rainbow-mode))
+
 ;;; TODO: not sure this still work
 (neo/use-package centered-window
   :custom (cwm-centered-window-width 100))
@@ -754,10 +757,7 @@ default lsp-passthrough."
       (`(t . _) (treemacs-git-mode 'simple)))
 
     (treemacs-hide-gitignored-files-mode nil))
-<<<<<<< Updated upstream
-=======
   :hook ((treemacs-mode . (lambda () (setq-local mode-line-format nil))))
->>>>>>> Stashed changes
   :bind
   (:map
    global-map
@@ -1176,6 +1176,88 @@ default lsp-passthrough."
   :hook (git-commit-mode . git-commit-insert-issue-mode))
 
 (neo/use-package git-timemachine)
+
+(neo/use-package git-gutter
+  :hook
+  ((markdown-mode . git-gutter-mode)
+   (prog-mode . git-gutter-mode)
+   (conf-mode . git-gutter-mode))
+  :config
+  (setq
+   git-gutter:disabled-modes '(org-mode asm-mode image-mode)
+   git-gutter:update-interval 1
+   git-gutter:window-width 2
+   git-gutter:ask-p nil))
+
+(neo/use-package git-gutter-fringe
+  :diminish git-gutter-mode
+  :after git-gutter
+  :demand fringe-helper
+  :config
+  ;; subtle diff indicators in the fringe
+  ;; places the git gutter outside the margins.
+  (setq-default fringes-outside-margins t)
+  ;; thin fringe bitmaps
+  (define-fringe-bitmap 'git-gutter-fr:added
+    [224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224]
+    nil nil 'center)
+  (define-fringe-bitmap 'git-gutter-fr:modified
+    [224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224
+     224]
+    nil nil 'center)
+  (define-fringe-bitmap
+    'git-gutter-fr:deleted
+    [0 0 0 0 0 0 0 0 0 0 0 0 0 128 192 224 240 248]
+    nil
+    nil
+    'center))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Elisp
