@@ -754,6 +754,10 @@ default lsp-passthrough."
       (`(t . _) (treemacs-git-mode 'simple)))
 
     (treemacs-hide-gitignored-files-mode nil))
+<<<<<<< Updated upstream
+=======
+  :hook ((treemacs-mode . (lambda () (setq-local mode-line-format nil))))
+>>>>>>> Stashed changes
   :bind
   (:map
    global-map
