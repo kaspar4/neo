@@ -820,6 +820,7 @@ default lsp-passthrough."
 (neo/use-package blackboard-theme)
 (neo/use-package doom-themes)
 (neo/use-package dracula-theme)
+(neo/use-package ef-themes)
 (neo/use-package modus-themes
   :config
   (setq modus-themes-syntax
