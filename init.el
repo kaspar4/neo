@@ -789,7 +789,11 @@ default lsp-passthrough."
   :after (treemacs)
   :config (treemacs-set-scope-type 'Tabs))
 
+(add-hook 'helpful-mode-hook (lambda () (set-window-margins nil 2 2)))
+(add-hook 'Info-mode-hook (lambda () (set-window-margins nil 2 2)))
+
 (neo/use-package hl-todo)
+
 
 ;;; Fonts
 
