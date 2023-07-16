@@ -789,6 +789,7 @@ default lsp-passthrough."
   :after (treemacs)
   :config (treemacs-set-scope-type 'Tabs))
 
+(neo/use-package hl-todo-mode)
 
 ;;; Fonts
 
