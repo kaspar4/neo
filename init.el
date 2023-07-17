@@ -944,8 +944,7 @@ default lsp-passthrough."
   "Buffer-local face remapping for help buffers."
   (face-remap-add-relative
    'default
-   :background background
-   :foreground "black"))
+   :background (face-attribute 'hl-line :background)))
 
 (add-hook
  'Info-mode-hook (lambda () (neo/help-mode-faces "light steel blue")))
