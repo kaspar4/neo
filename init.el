@@ -1431,6 +1431,17 @@ default lsp-passthrough."
 (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
 
 ;;;-----------------------------------------------------------------------------------
+;;; App/copilot
+
+(neo/use-package copilot
+  :elpaca
+  (:host
+   github
+   :repo "zerolfx/copilot.el"
+   :files ("dist" "copilot.el"))
+  :ensure t)
+
+;;;-----------------------------------------------------------------------------------
 ;;; App/Dashboard
 
 (defun neo/setup-logo ()
