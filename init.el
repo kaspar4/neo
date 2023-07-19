@@ -1433,12 +1433,9 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; App/copilot
 
+;;; TODO: investigate login
 (neo/use-package copilot
-  :elpaca
-  (:host
-   github
-   :repo "zerolfx/copilot.el"
-   :files ("dist" "copilot.el"))
+  :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t)
 
 ;;;-----------------------------------------------------------------------------------
