@@ -1378,6 +1378,10 @@ default lsp-passthrough."
 ;;; requires go install github.com/davidrjenni/reftools/cmd/fillstruct@latest~
 (neo/use-package go-fill-struct)
 
+;;; TODO: this cannot be the right way. If I had more than one
+;;; project, which I don't, I would be doomed
+(setenv "GOPACKAGESDRIVER" "/home/mav/uno/tools/gopackagesdriver.sh")
+
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Latex
 
