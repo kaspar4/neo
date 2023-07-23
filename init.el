@@ -254,6 +254,9 @@
 ;;     (restart-emacs (cdr (neo/emacs-args)))))
 ;;; End of 28.2 compatibility
 
+;;; Notes:
+;;; gh pr merge --auto --squash 39 make things that pass checks be automatically merged
+
 (defun neo/sync-neo ()
   (message "We try to sync Emacs before restarting"))
 
