@@ -1008,6 +1008,10 @@ default lsp-passthrough."
    (c++-ts-mode . eglot-ensure)
    (c++-mode . eglot-ensure)))
 
+(neo/use-package flycheck-eglot
+  :after (flycheck eglot)
+  :config (global-flycheck-eglot-mode 1))
+
 (defun eglot-organize-imports ()
   "Offer to execute the source.organizeImports code action."
   (interactive)
@@ -1678,6 +1682,11 @@ default lsp-passthrough."
 (neo/use-package kubernetes-tramp)
 
 ;;;-----------------------------------------------------------------------------------
+;;; App/Bluetooth
+
+(neo/use-package bluetooth)
+
+;;;-----------------------------------------------------------------------------------
 ;;; Fun
 
 (neo/use-package xkcd)
@@ -1685,6 +1694,11 @@ default lsp-passthrough."
   :elpaca nil)
 (neo/use-package autotetris-mode)
 (neo/use-package selectric-mode)
-
+(neo/use-package soccer
+  :config (setq soccer-time-local-time-utc-offset "-04")
+  :bind
+  (("C-c s f" . soccer-fixtures-next)
+   ("C-c s r" . soccer-results-last)
+   ("C-c s t" . soccer-table)))
 ;;;-----------------------------------------------------------------------------------
 ;;; TODO
