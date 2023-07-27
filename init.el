@@ -1572,6 +1572,21 @@ default lsp-passthrough."
   :hook ((dashboard-after-initialize . neo/clear-cursor)))
 
 ;;;-----------------------------------------------------------------------------------
+;;; App/Citations
+;;;
+;;; not sure this should count as an 'appplication'
+
+(neo/use-package citar
+  :custom (citar-bibliography '("~/bib/references.bib"))
+  :hook
+  (LaTeX-mode . citar-capf-setup)
+  (org-mode . citar-capf-setup))
+
+(neo/use-package citar-org-roam
+  :after (citar org-roam)
+  :config (citar-org-roam-mode))
+
+;;;-----------------------------------------------------------------------------------
 ;;; App/Org
 
 (neo/use-package org-modern
@@ -1635,6 +1650,19 @@ default lsp-passthrough."
 ;;; runbook and incident reports
 (neo/use-package org-runbook)
 
+(neo/use-package org-appear
+  :hook (org-mode . org-appear-mode))
+
+(cl-defmethod org-roam-node-type ((node org-roam-node))
+  "Return the TYPE of NODE."
+  (condition-case nil
+      (file-name-nondirectory
+       (directory-file-name
+        (file-name-directory
+         (file-relative-name (org-roam-node-file node)
+                             org-roam-directory))))
+    (error "")))
+
 (neo/use-package org-roam
   :elpaca
   (:host
@@ -1646,6 +1674,8 @@ default lsp-passthrough."
   (("C-c n f" . #'org-roam-node-find)
    ("C-c n g" . #'org-roam-graph)
    ("C-c n t" . #'org-roam-tag-add)
+   ("C-c n o" . #'org-id-get-create)
+   ("C-c n a" . #'org-roam-alias-add)
    ("C-c n i" . #'org-roam-node-insert)
    ("C-c n c" . #'org-roam-capture)
    ("C-c n :" . #'org-roam-buffer-toggle)
@@ -1656,6 +1686,7 @@ default lsp-passthrough."
   ;; (setq org-roam-dailies-capture-templates
   ;;       '(("d" "default" entry
   ;;          "* %?"
+
   ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
   ;;               "#+title: %<%Y-%m-%d>\n"))))
 
