@@ -1635,57 +1635,61 @@ default lsp-passthrough."
 ;;; runbook and incident reports
 (neo/use-package org-runbook)
 
-(use-package
- org-roam
- :custom (org-roam-directory (file-truename "~/org-roam/"))
- :bind
- (("C-c n f" . #'org-roam-node-find)
-  ("C-c n g" . #'org-roam-graph)
-  ("C-c n t" . #'org-roam-tag-add)
-  ("C-c n i" . #'org-roam-node-insert)
-  ("C-c n c" . #'org-roam-capture)
-  ("C-c n :" . #'org-roam-buffer-toggle)
-  ("C-c n j" . #'org-roam-dailies-capture-today))
- :config
- ;; (setq org-roam-dailies-directory "daily/")
+(neo/use-package org-roam
+  :elpaca
+  (:host
+   github
+   :repo "org-roam/org-roam"
+   :files (:defaults "extensions/*"))
+  :custom (org-roam-directory (file-truename "~/org-roam/"))
+  :bind
+  (("C-c n f" . #'org-roam-node-find)
+   ("C-c n g" . #'org-roam-graph)
+   ("C-c n t" . #'org-roam-tag-add)
+   ("C-c n i" . #'org-roam-node-insert)
+   ("C-c n c" . #'org-roam-capture)
+   ("C-c n :" . #'org-roam-buffer-toggle)
+   ("C-c n j" . #'org-roam-dailies-capture-today))
+  :config
+  ;; (setq org-roam-dailies-directory "daily/")
 
- ;; (setq org-roam-dailies-capture-templates
- ;;       '(("d" "default" entry
- ;;          "* %?"
- ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
- ;;               "#+title: %<%Y-%m-%d>\n"))))
+  ;; (setq org-roam-dailies-capture-templates
+  ;;       '(("d" "default" entry
+  ;;          "* %?"
+  ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
+  ;;               "#+title: %<%Y-%m-%d>\n"))))
 
- ;; If you're using a vertical completion framework, you might want a more informative completion interface
- (setq org-roam-node-display-template
-       (concat
-        "${type:15} ${title:*} "
-        (propertize "${tags:10}" 'face 'org-tag)))
- (org-roam-db-autosync-mode)
- (setq
-  org-roam-capture-templates
-  '(("m"
-     "main"
-     plain
-     "%?"
-     :if-new (file+head "main/${slug}.org" "#+title: ${title}\n")
-     :immediate-finish t
-     :unnarrowed t)
-    ("r"
-     "reference"
-     plain
-     "%?"
-     :if-new (file+head "reference/${title}.org" "#+title: ${title}\n")
-     :immediate-finish t
-     :unnarrowed t)
-    ("a" "article" plain "%?"
-     :if-new
-     (file+head
-      "articles/${title}.org"
-      "#+title: ${title}\n#+filetags: :article:\n")
-     :immediate-finish t
-     :unnarrowed t)))
- ;; If using org-roam-protocol
- (require 'org-roam-protocol))
+  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-node-display-template
+        (concat
+         "${type:15} ${title:*} "
+         (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode)
+  (setq
+   org-roam-capture-templates
+   '(("m"
+      "main"
+      plain
+      "%?"
+      :if-new (file+head "main/${slug}.org" "#+title: ${title}\n")
+      :immediate-finish t
+      :unnarrowed t)
+     ("r"
+      "reference"
+      plain
+      "%?"
+      :if-new (file+head "reference/${title}.org" "#+title: ${title}\n")
+      :immediate-finish t
+      :unnarrowed t)
+     ("a" "article" plain "%?"
+      :if-new
+      (file+head
+       "articles/${title}.org"
+       "#+title: ${title}\n#+filetags: :article:\n")
+      :immediate-finish t
+      :unnarrowed t)))
+  ;; If using org-roam-protocol
+  (require 'org-roam-protocol))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Presentations
