@@ -1664,15 +1664,18 @@ default lsp-passthrough."
 (neo/use-package org-appear
   :hook (org-mode . org-appear-mode))
 
-(cl-defmethod org-roam-node-type ((node org-roam-node))
-  "Return the TYPE of NODE."
-  (condition-case nil
-      (file-name-nondirectory
-       (directory-file-name
-        (file-name-directory
-         (file-relative-name (org-roam-node-file node)
-                             org-roam-directory))))
-    (error "")))
+(add-hook
+ 'after-init-hook
+ (lambda ()
+   (cl-defmethod org-roam-node-type ((node org-roam-node))
+     "Return the TYPE of NODE."
+     (condition-case nil
+         (file-name-nondirectory
+          (directory-file-name
+           (file-name-directory
+            (file-relative-name (org-roam-node-file node)
+                                org-roam-directory))))
+       (error "")))))
 
 (neo/use-package org-roam
   :elpaca
