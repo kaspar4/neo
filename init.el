@@ -1442,6 +1442,17 @@ default lsp-passthrough."
 (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
 
 ;;;-----------------------------------------------------------------------------------
+;;; Dev/Languages/Typescript
+
+(neo/use-package tide
+  :after (flycheck)
+  :hook
+  ((typescript-ts-mode . tide-setup)
+   (tsx-ts-mode . tide-setup)
+   (typescript-ts-mode . tide-hl-identifier-mode)
+   (before-save . tide-format-before-save)))
+
+;;;-----------------------------------------------------------------------------------
 ;;; App/copilot
 
 ;;; TODO: investigate login
