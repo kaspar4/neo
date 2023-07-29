@@ -119,6 +119,13 @@
  ;; Assume :elpaca t unless otherwise specified.
  (setq elpaca-use-package-by-default t))
 
+;;; TODO: figure out where duplicate packages get queued
+;;; till then is very annoying to see things like:
+;;; ⛔ Warning (emacs): Duplicate item queued: ace-window
+;;; ⛔ Warning (emacs): Duplicate item queued: magit
+;;; ⛔ Warning (emacs): Duplicate item queued: org-roam
+(setq warning-minimum-level :error)
+
 ;; Block until current queue processed.
 (elpaca-wait)
 
