@@ -1444,6 +1444,8 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Typescript
 
+(neo/use-package typescript-mode)
+
 (neo/use-package tide
   :after (flycheck)
   :hook
