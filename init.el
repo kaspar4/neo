@@ -13,12 +13,18 @@
 
 (require 'map)
 
+(defun neo/filter-package-args (args)
+  (mapc
+   (lambda (el) (setq args (map-delete args el)))
+   '(:doc :ensure-system-package))
+  args)
+
 (defmacro neo/use-package (name &rest args)
   "Augment 'use-package' with Neo specific functionality.
 
 :doc adds a documentation string, mainly for reminding me of what packages do."
   (declare (indent defun))
-  (let ((args (map-delete args :doc)))
+  (let ((args (neo/filter-package-args args)))
     `(use-package
       ,name
       ;     :elpaca nil
