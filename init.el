@@ -133,6 +133,7 @@
   :config
   (setq system-packages-package-manager 'apt)
   (setq system-packages-use-sudo t)
+  (setq system-packages-noconfirm t)
   (setq async-shell-command-buffer 'rename-buffer))
 
 (neo/use-package use-package-ensure-system-package
@@ -1617,7 +1618,10 @@ default lsp-passthrough."
 
 (neo/use-package ob-mermaid
   :after org-modern
-  :ensure-system-package (mermaid . "sudo npm install -g mermaid.cli")
+  :ensure-system-package
+  (mermaid
+   .
+   "[ ! -d /usr/local/lib/node_modules/mermaid.cli ] && sudo npm install -g mermaid.cli")
   :ensure-system-package ditaa
   :config
   (org-babel-do-load-languages
