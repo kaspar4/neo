@@ -1701,7 +1701,7 @@ default lsp-passthrough."
   (global-org-modern-mode))
 
 (neo/use-package org-tempo
-  :straight nil ; part of org
+  :elpaca nil ; part of org
   :after org
   :config
   (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
