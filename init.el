@@ -599,34 +599,42 @@ default lsp-passthrough."
  '((right-divider-width . 40) (internal-border-width . 40)))
 
 ;; TODO this slows down terribly switching and saving buffers, or so it seems; wasn't the case w/ my previous config
-;; (dolist (buffer-re '("\\*compilation\\*" "\\*system-packages\\*" "\\*Warnings\\*" "\\*Messages\\*"))
-;;   (add-to-list 'display-buffer-alist `(,buffer-re display-buffer-no-window (allow-no-window . t))))
+(dolist (buffer-re
+         '("\\*compilation\\*"
+           "\\*system-packages\\*"
+           "\\*Warnings\\*"
+           "\\*Messages\\*"))
+  (add-to-list
+   'display-buffer-alist
+   `(,buffer-re display-buffer-no-window (allow-no-window . t))))
 
-;; (add-to-list 'display-buffer-alist
-;;  '("\\*info\\*"
-;;    (display-buffer-in-side-window)
-;;    (side . left)
-;;    (slot . 0)
-;;    (window-width . 80)
-;;    (window-parameters
-;;     (no-delete-other-windows . t))))
+(add-to-list
+ 'display-buffer-alist
+ '("\\*info\\*"
+   (display-buffer-in-side-window)
+   (side . left)
+   (slot . 0)
+   (window-width . 80)
+   (window-parameters (no-delete-other-windows . t))))
 
-;; (add-to-list 'display-buffer-alist
-;;  '((lambda (buffer alist)
-;;                  (with-current-buffer buffer
-;;                    (eq major-mode 'DocView)))
-;;    (display-buffer-in-side-window)
-;;    (side . right)
-;;    (slot . 0)
-;;    (window-width . 80)
-;;    (window-parameters
-;;     (no-delete-other-windows . t))))
+(add-to-list
+ 'display-buffer-alist
+ '((lambda (buffer alist)
+     (with-current-buffer buffer
+       (eq major-mode 'DocView)))
+   (display-buffer-in-side-window)
+   (side . right)
+   (slot . 0)
+   (window-width . 80)
+   (window-parameters (no-delete-other-windows . t))))
 
-;; (add-to-list 'display-buffer-alist
-;;   '("\\*e?shell\\*" display-buffer-in-direction
-;;     (direction . bottom)
-;;     (window . root)
-;;     (window-height . 0.3)))
+(add-to-list
+ 'display-buffer-alist
+ '("\\*e?shell\\*"
+   display-buffer-in-direction
+   (direction . bottom)
+   (window . root)
+   (window-height . 0.3)))
 
 (defvar neo/title "N E O   E M A C S")
 
