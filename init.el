@@ -13,7 +13,12 @@
 
 (require 'map)
 
-(defvar neo/ignore-ensure-system-package nil)
+;;; ensure-system-package uses an async buffer (in a side window) which in turns
+;;; causes the dashboard to be locked in there, a small window at the bottom of the
+;;; frame that cannot even been grown.
+;;; TODO: fix the mess for real
+;;; for now, I just disable this, as I have everything installed.
+(defvar neo/ignore-ensure-system-package t)
 
 (defun neo/filter-package-args (args)
   (let ((ignore-list
@@ -1000,7 +1005,7 @@ default lsp-passthrough."
   :hook (prog-mode . bug-reference-github-set-url-format))
 
 (neo/use-package eglot
-  :ensure-system-package '(python3-pylsp clangd-15)
+  :ensure-system-package (python3-pylsp clangd-15)
   :config
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-15")))
