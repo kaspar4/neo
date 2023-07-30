@@ -1634,8 +1634,21 @@ default lsp-passthrough."
 ;;; App/Org
 
 (neo/use-package org-modern
-  :config (setq org-startup-with-inline-images t)
-  :hook (org-babel-after-execute . org-redisplay-inline-images))
+  :config
+  (setq org-startup-with-inline-images t)
+  (add-to-list
+   'ispell-skip-region-alist
+   '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:"))
+  (add-to-list
+   'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC"))
+  (add-to-list
+   'ispell-skip-region-alist
+   '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
+
+  :hook
+  (org-babel-after-execute . org-redisplay-inline-images)
+  (org-mode . variable-pitch-mode)
+  (org-mode . visual-line-mode))
 
 (elpaca-wait)
 
@@ -1687,6 +1700,20 @@ default lsp-passthrough."
    org-agenda-current-time-string "⭠ now ─────────────────────────────────────────────────")
   (global-org-modern-mode))
 
+(neo/use-package org-tempo
+  :straight nil ; part of org
+  :after org
+  :config
+  (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+  (add-to-list 'org-structure-template-alist '("b" . "src bash"))
+  (add-to-list
+   'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  (add-to-list 'org-structure-template-alist '("go" . "src go"))
+  (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
+  (add-to-list 'org-structure-template-alist '("json" . "src json")))
+
+
 (neo/use-package org-tidy
   :config (add-hook 'org-mode-hook #'org-tidy-mode))
 
@@ -1699,19 +1726,6 @@ default lsp-passthrough."
 
 (neo/use-package org-appear
   :hook (org-mode . org-appear-mode))
-
-(add-hook
- 'after-init-hook
- (lambda ()
-   (cl-defmethod org-roam-node-type ((node org-roam-node))
-     "Return the TYPE of NODE."
-     (condition-case nil
-         (file-name-nondirectory
-          (directory-file-name
-           (file-name-directory
-            (file-relative-name (org-roam-node-file node)
-                                org-roam-directory))))
-       (error "")))))
 
 (neo/use-package org-roam
   :elpaca
@@ -1740,6 +1754,15 @@ default lsp-passthrough."
   ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
   ;;               "#+title: %<%Y-%m-%d>\n"))))
 
+  (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    (condition-case nil
+        (file-name-nondirectory
+         (directory-file-name
+          (file-name-directory
+           (file-relative-name (org-roam-node-file node)
+                               org-roam-directory))))
+      (error "")))
   ;; If you're using a vertical completion framework, you might want a more informative completion interface
   (setq org-roam-node-display-template
         (concat
