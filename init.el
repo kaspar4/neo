@@ -13,11 +13,17 @@
 
 (require 'map)
 
+(defvar neo/ignore-ensure-system-package nil)
+
 (defun neo/filter-package-args (args)
-  (mapc
-   (lambda (el) (setq args (map-delete args el)))
-   '(:doc :ensure-system-package))
-  args)
+  (let ((ignore-list
+         (append
+          '(:doc)
+          (if neo/ignore-ensure-system-package
+              '(:ensure-system-package)
+            '()))))
+    (mapc (lambda (el) (setq args (map-delete args el))) ignore-list)
+    args))
 
 (defmacro neo/use-package (name &rest args)
   "Augment 'use-package' with Neo specific functionality.
@@ -994,9 +1000,7 @@ default lsp-passthrough."
   :hook (prog-mode . bug-reference-github-set-url-format))
 
 (neo/use-package eglot
-  :ensure-system-package
-  python3-pylsp
-  clangd-15
+  :ensure-system-package '(python3-pylsp clangd-15)
   :config
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-15")))
