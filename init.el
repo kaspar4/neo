@@ -597,6 +597,30 @@ default lsp-passthrough."
         (yas-expand-snippet snippet-body)
         (org-mode))))
 
+;;;-----------------------------------------------------------------------------------
+;;; Movement
+
+(neo/use-package ace-jump-mode
+  :chords
+  (("jj" . ace-jump-char-mode)
+   ("jk" . ace-jump-word-mode)
+   ("jl" . ace-jump-line-mode)))
+
+(neo/use-package ace-window
+  :bind ("C-x o" . ace-window)
+  :chords (("''" . ace-window))
+  :custom-face
+  ;; foreground should be computed from current theme, preserved the same way across restarts and
+  ;; restored.
+  ;; font is https://www.1001fonts.com/download/font/faster-one.regular.ttf
+  (aw-leading-char-face
+   ((t
+     (:inherit
+      ace-jump-face-foreground
+      :font "FasterOne"
+      :height 3.0
+      :foreground "dark gray")))))
+
 
 ;;;-----------------------------------------------------------------------------------
 ;;; UI
@@ -947,30 +971,6 @@ default lsp-passthrough."
 (neo/use-package svg-tag-mode)
 
 (neo/use-package diminish)
-
-;;;-----------------------------------------------------------------------------------
-;;; Movement
-
-(neo/use-package ace-jump-mode
-  :chords
-  (("jj" . ace-jump-char-mode)
-   ("jk" . ace-jump-word-mode)
-   ("jl" . ace-jump-line-mode)))
-
-(neo/use-package ace-window
-  :bind ("C-x o" . ace-window)
-  :chords (("''" . ace-window))
-  :custom-face
-  ;; foreground should be computed from current theme, preserved the same way across restarts and
-  ;; restored.
-  ;; font is https://www.1001fonts.com/download/font/faster-one.regular.ttf
-  (aw-leading-char-face
-   ((t
-     (:inherit
-      ace-jump-face-foreground
-      :font "FasterOne"
-      :height 3.0
-      :foreground "dark gray")))))
 
 
 ;;;-----------------------------------------------------------------------------------
