@@ -159,6 +159,24 @@
 (neo/use-package use-package-chords
   :config (key-chord-mode 1))
 
+;;;-----------------------------------------------------------------------------------
+;;; Save Areas
+
+(neo/use-package no-littering
+  :init
+  ;; We define these in early-init.el so everything can be kept out of the way
+  ;; in particular elpaca and eln-cache
+  ;(setq no-littering-etc-directory (expand-file-name "litter/config" user-emacs-directory))
+  ;(setq no-littering-var-directory (expand-file-name "litter/data" user-emacs-directory))
+  (setq custom-file
+        (expand-file-name "custom.el" no-littering-var-directory))
+  :config
+  (setq auto-save-file-name-transforms
+        `((".*"
+           ,(no-littering-expand-var-file-name "auto-save/")
+           t))))
+
+
 (neo/use-package delight)
 
 ;; Block until current queue processed.
@@ -294,23 +312,6 @@
     (save-buffers-kill-emacs)))
 
 (global-set-key (kbd "C-x C-c") 'neo/restart-emacs-or-exit)
-
-;;;-----------------------------------------------------------------------------------
-;;; Save Areas
-
-(neo/use-package no-littering
-  :init
-  ;; We define these in early-init.el so everything can be kept out of the way
-  ;; in particular elpaca and eln-cache
-  ;(setq no-littering-etc-directory (expand-file-name "litter/config" user-emacs-directory))
-  ;(setq no-littering-var-directory (expand-file-name "litter/data" user-emacs-directory))
-  (setq custom-file
-        (expand-file-name "custom.el" no-littering-var-directory))
-  :config
-  (setq auto-save-file-name-transforms
-        `((".*"
-           ,(no-littering-expand-var-file-name "auto-save/")
-           t))))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; History
@@ -895,7 +896,7 @@ default lsp-passthrough."
 (neo/use-package nordic-night-theme
   :elpaca (nordic-night :host sourcehut :repo "ashton314/nordic-night"))
 
-(elpaca-wait)
+;(elpaca-wait)
 
 (defvar neo/current-theme 'doom-tomorrow-day
   "Theme applied")
@@ -1650,7 +1651,7 @@ default lsp-passthrough."
   (org-mode . variable-pitch-mode)
   (org-mode . visual-line-mode))
 
-(elpaca-wait)
+;(elpaca-wait)
 
 (neo/use-package ob-mermaid
   :after org-modern
