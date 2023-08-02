@@ -741,9 +741,9 @@ default lsp-passthrough."
 (add-hook
  'prog-mode-hook
  (lambda ()
-   (glasses-mode)
    (setq glasses-separator "")
-   (setq glasses-face 'bold)))
+   (setq glasses-face 'bold)
+   (glasses-mode)))
 
 (neo/use-package treemacs
   :init
