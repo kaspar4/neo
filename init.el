@@ -738,6 +738,13 @@ default lsp-passthrough."
   :disabled
   :config (beacon-mode))
 
+(add-hook
+ 'prog-mode-hook
+ (lambda ()
+   (glasses-mode)
+   (setq glasses-separator "")
+   (setq glasses-face 'bold)))
+
 (neo/use-package treemacs
   :init
   (with-eval-after-load 'winum
