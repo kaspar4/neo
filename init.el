@@ -1844,7 +1844,11 @@ default lsp-passthrough."
    vterm-mode-map
    ("s-t" . #'vterm-toggle)))
 
-(neo/use-package eshell-vterm)
+(neo/use-package eshell-vterm
+  :after eshell
+  :config
+  (eshell-vterm-mode)
+  (defalias 'eshell/v 'eshell-exec-visual))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Kubernetes
