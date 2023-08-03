@@ -733,10 +733,15 @@ default lsp-passthrough."
 (neo/use-package centered-window
   :custom (cwm-centered-window-width 100))
 
-;;; TODO: not sure I want this
-(neo/use-package beacon
-  :disabled
-  :config (beacon-mode))
+(neo/use-package emacs
+  :elpaca nil
+  :hook
+  (prog-mode
+   .
+   (lambda ()
+     (setq glasses-separator "")
+     (setq glasses-face 'extra-bold)
+     (glasses-mode))))
 
 (add-hook
  'prog-mode-hook
