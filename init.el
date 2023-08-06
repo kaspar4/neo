@@ -1659,7 +1659,18 @@ default lsp-passthrough."
   (add-to-list
    'ispell-skip-region-alist
    '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
-
+  (setq
+   org-capture-templates
+   `(("p"
+      "Protocol"
+      entry
+      (file+headline ,(concat org-directory "notes.org") "Inbox")
+      "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+     ("L"
+      "Protocol Link"
+      entry
+      (file+headline ,(concat org-directory "notes.org") "Inbox")
+      "* %? [[%:link][%:description]] \nCaptured On: %U")))
   :hook
   (org-babel-after-execute . org-redisplay-inline-images)
   (org-mode . variable-pitch-mode)
@@ -1689,18 +1700,6 @@ default lsp-passthrough."
 ;; Install the chrome extension from https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc
 ;;
 
-(setq
- org-capture-templates
- `(("p"
-    "Protocol"
-    entry
-    (file+headline ,(concat org-directory "notes.org") "Inbox")
-    "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
-   ("L"
-    "Protocol Link"
-    entry
-    (file+headline ,(concat org-directory "notes.org") "Inbox")
-    "* %? [[%:link][%:description]] \nCaptured On: %U")))
 
 (use-package
  org-protocol
