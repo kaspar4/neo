@@ -740,6 +740,7 @@ default lsp-passthrough."
    .
    (lambda ()
      (setq glasses-separator "")
+     (setq glasses-original-separator "")
      (setq glasses-face 'extra-bold)
      (subword-mode)
      (glasses-mode))))
