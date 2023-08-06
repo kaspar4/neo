@@ -1665,7 +1665,47 @@ default lsp-passthrough."
   (org-mode . variable-pitch-mode)
   (org-mode . visual-line-mode))
 
-;(elpaca-wait)
+;;; org-capture
+;;
+;; in ~/.local/share/applications/org-protocol.desktop:
+;; [Desktop Entry]
+;; Name=org-protocol
+;; Exec=emacsclient %u
+;; Type=Application
+;; Terminal=false
+;; Categories=System;
+;; MimeType=x-scheme-handler/org-protocol;
+;;
+;; Run update-desktop-database ~/.local/share/applications/
+;;
+;; sudo mkdir -p /etc/opt/chrome/policies/managed/
+;; sudo tee /etc/opt/chrome/policies/managed/external_protocol_dialog.json >/dev/null <<'EOF'
+;; {
+;;   "ExternalProtocolDialogShowAlwaysOpenCheckbox": true
+;; }
+;; EOF
+;; sudo chmod 644 /etc/opt/chrome/policies/managed/external_protocol_dialog.json
+;;
+;; Install the chrome extension from https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc
+;;
+
+(setq
+ org-capture-templates
+ `(("p"
+    "Protocol"
+    entry
+    (file+headline ,(concat org-directory "notes.org") "Inbox")
+    "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+   ("L"
+    "Protocol Link"
+    entry
+    (file+headline ,(concat org-directory "notes.org") "Inbox")
+    "* %? [[%:link][%:description]] \nCaptured On: %U")))
+
+(use-package
+ org-protocol
+ :elpaca nil ; part of org
+ )
 
 (neo/use-package ob-mermaid
   :after org-modern
