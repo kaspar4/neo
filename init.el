@@ -1012,6 +1012,12 @@ default lsp-passthrough."
 (neo/use-package flycheck
   :init (global-flycheck-mode))
 
+(neo/use-package flycheck-clang-analyzer
+  :after flycheck
+  :config (flycheck-clang-analyzer-setup))
+
+(neo/use-package flycheck-status-emoji)
+
 (neo/use-package bug-reference-github
   :init
   (setq
@@ -1701,10 +1707,9 @@ default lsp-passthrough."
 ;;
 
 
-(use-package
- org-protocol
- :elpaca nil ; part of org
- )
+(neo/use-package org-protocol
+  :elpaca nil ; part of org
+  )
 
 (neo/use-package ob-mermaid
   :after org-modern
@@ -1889,6 +1894,13 @@ default lsp-passthrough."
   :config
   (eshell-vterm-mode)
   (defalias 'eshell/v 'eshell-exec-visual))
+
+(neo/use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode))
+
+(neo/use-package eshell-syntax-highlighting
+  :after eshell-mode
+  :config (eshell-syntax-highlighting-global-mode +1))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Kubernetes
