@@ -1478,15 +1478,16 @@ default lsp-passthrough."
   :elpaca (tex :host github :repo "emacs-straight/auctex")
   :ensure auctex
   :hook
-  ((LaTeX-mode-hook . #'neo/auto-fill-mode)
-   (LaTeX-mode-hook . #'LaTeX-math-mode)
-   (LaTeX-mode-hook . #'TeX-source-correlate-mode)
-   (LaTeX-mode-hook . #'TeX-fold-mode)
-   (LaTeX-mode-hook . #'TeX-PDF-mode)
-   (LaTeX-mode-hook . #'latex-preview-pane-mode)
-   (TeX-mode-hook . #'prettify-symbols-mode)
-   (LaTeX-section-hook . #'LaTeX-section-label)
-   (LaTeX-mode-hook . (function turn-on-reftex))))
+  ((LaTeX-mode . #'neo/auto-fill-mode)
+   (LaTeX-mode . #'LaTeX-math-mode)
+   (LaTeX-mode . #'TeX-source-correlate-mode)
+   (LaTeX-mode . #'TeX-fold-mode)
+   (LaTeX-mode . #'TeX-PDF-mode)
+   (LaTeX-mode . #'latex-preview-pane-mode)
+   (LaTeX-mode . #'turn-on-prettify-symbols-mode)
+   (LaTeX-mode . #'turn-on-flyspell)
+   (LaTeX-section . #'LaTeX-section-label)
+   (LaTeX-mode . (function turn-on-reftex))))
 
 (neo/use-package latex-preview-pane
   :config (latex-preview-pane-enable))
