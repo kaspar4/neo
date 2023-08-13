@@ -1484,28 +1484,29 @@ default lsp-passthrough."
      "%`%l -shell-escape %(mode)%' %t"
      TeX-run-TeX
      nil
-     t))
-  :hook
-  ((LaTeX-mode . #'neo/auto-fill-mode)
-   (LaTeX-mode . #'LaTeX-math-mode)
-   (LaTeX-mode . #'TeX-source-correlate-mode)
-   (LaTeX-mode . #'TeX-fold-mode)
-   (LaTeX-mode . #'TeX-PDF-mode)
-   (LaTeX-mode . #'latex-preview-pane-mode)
-   (LaTeX-mode . #'turn-on-prettify-symbols-mode)
-   (LaTeX-mode . #'turn-on-flyspell)
-   (LaTeX-section . #'LaTeX-section-label)
-   (LaTeX-mode . (function turn-on-reftex))))
+     t)))
+
+;; :hook
+;; ((LaTeX-mode . #'neo/auto-fill-mode)
+;;  (LaTeX-mode . #'LaTeX-math-mode)
+;;  (LaTeX-mode . #'TeX-source-correlate-mode)
+;;  (LaTeX-mode . #'TeX-fold-mode)
+;;  (LaTeX-mode . #'TeX-PDF-mode)
+;;  (LaTeX-mode . #'latex-preview-pane-mode)
+;;  (LaTeX-mode . #'turn-on-prettify-symbols-mode)
+;;  (LaTeX-mode . #'turn-on-flyspell)
+;;  (LaTeX-section . #'LaTeX-section-label)
+;;  (LaTeX-mode . (function turn-on-reftex))))
 
 (neo/use-package latex-preview-pane
   :config
-  (setq preview-LaTeX-command
-        '("%`%l \"\\nonstopmode\\nofiles\\PassOptionsToPackage{"
-          ("," . preview-required-option-list)
-          "}{preview}\\AtBeginDocument{\\ifx\\ifPreview\\undefined"
-          preview-default-preamble
-          "\\fi}\"%' \"\\detokenize{\" %(t-filename-only) \"}\""))
-
+  (setq
+   preview-LaTeX-command
+   '("%`%l -shell-escape \"\\nonstopmode\\nofiles\\PassOptionsToPackage{"
+     ("," . preview-required-option-list)
+     "}{preview}\\AtBeginDocument{\\ifx\\ifPreview\\undefined"
+     preview-default-preamble
+     "\\fi}\"%' \"\\detokenize{\" %(t-filename-only) \"}\""))
   (latex-preview-pane-enable))
 
 (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
