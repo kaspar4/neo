@@ -1477,6 +1477,14 @@ default lsp-passthrough."
 (neo/use-package tex
   :elpaca (tex :host github :repo "emacs-straight/auctex")
   :ensure auctex
+  :config
+  (add-to-list
+   'TeX-command-list
+   '("LaTeX Shell Escape"
+     "%`%l -shell-escape %(mode)%' %t"
+     TeX-run-TeX
+     nil
+     t))
   :hook
   ((LaTeX-mode . #'neo/auto-fill-mode)
    (LaTeX-mode . #'LaTeX-math-mode)
@@ -1490,7 +1498,15 @@ default lsp-passthrough."
    (LaTeX-mode . (function turn-on-reftex))))
 
 (neo/use-package latex-preview-pane
-  :config (latex-preview-pane-enable))
+  :config
+  (setq preview-LaTeX-command
+        '("%`%l \"\\nonstopmode\\nofiles\\PassOptionsToPackage{"
+          ("," . preview-required-option-list)
+          "}{preview}\\AtBeginDocument{\\ifx\\ifPreview\\undefined"
+          preview-default-preamble
+          "\\fi}\"%' \"\\detokenize{\" %(t-filename-only) \"}\""))
+
+  (latex-preview-pane-enable))
 
 (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
 
