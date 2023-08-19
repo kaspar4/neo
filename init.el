@@ -991,7 +991,7 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; Help
 
-(defun neo/help-mode-faces (background)
+(defun neo/help-modve-faces (background)
   "Buffer-local face remapping for help buffers."
   (face-remap-add-relative
    'default
@@ -1157,6 +1157,9 @@ default lsp-passthrough."
   :config (define-key c++-mode-map (kbd "C-;") 'doc-show-inline-mode)
 
   :hook (c++-mode . doc-show-inline-mode))
+
+(neo/use-package copilot
+  :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el")))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Project
