@@ -991,7 +991,7 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; Help
 
-(defun neo/help-modve-faces (background)
+(defun neo/help-mode-faces (background)
   "Buffer-local face remapping for help buffers."
   (face-remap-add-relative
    'default
