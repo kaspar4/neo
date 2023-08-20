@@ -1107,10 +1107,10 @@ default lsp-passthrough."
 
 ;; (add-hook 'go-mode-hook #'eglot-organize-imports-on-save)
 
-;(defun neo/eglot-organize-imports () (interactive)
-;       (eglot-code-actions nil nil "source.organizeImports" t))
-;(add-hook 'before-save-hook 'neo/eglot-organize-imports nil t)
-;(add-hook 'before-save-hook 'eglot-format-buffer)
+(defun neo/eglot-organize-imports () (interactive)
+       (eglot-code-actions nil nil "source.organizeImports" t))
+(add-hook 'before-save-hook 'neo/eglot-organize-imports nil t)
+(add-hook 'before-save-hook 'eglot-format-buffer)
 
 (defvar neo/treesit-grammar-dir
   (expand-file-name "tree-sitter/" no-littering-var-directory))
