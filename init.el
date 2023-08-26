@@ -711,7 +711,7 @@ default lsp-passthrough."
 (neo/use-package emojify
   :custom (emojify-emojis-dir (neo/litter-directory "emojis" emacs-version))
   :config
-  (add-to-list 'emojify-inhibit-major-modes 'Magit)
+  (add-to-list 'emojify-inhibit-major-modes 'magit-status-mode)
   (if (display-graphic-p)
       (setq emojify-display-style 'image)
     (setq emojify-display-style 'unicode))
