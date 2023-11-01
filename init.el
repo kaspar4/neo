@@ -260,8 +260,10 @@
            (file-directory-p neo/monorepo-path))
       neo/monorepo-path))
 
+(defvar neo/protect-neo-files t) ; set to nil when really intentional, but DNL
+
 (defun neo/neo-file-p (file)
-  (string-prefix-p "/home/mav/neo/" file))
+  (and neo/protect-neo-files (string-prefix-p "/home/mav/neo/" file)))
 
 (defun neo/maybe-write-protect ()
   (if (and (neo/monorepo) (neo/neo-file-p (buffer-file-name)))
@@ -1026,11 +1028,12 @@ default lsp-passthrough."
   :hook (prog-mode . bug-reference-github-set-url-format))
 
 (neo/use-package eglot
+  ; clangd-17 not installed through package manager
   :ensure-system-package (python3-pylsp clangd-15)
   :config
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-15")))
-  (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd-15")))
+  (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-17")))
+  (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd-17")))
 
   (setq-default eglot-workspace-configuration
                 '((:pylsp
@@ -1670,15 +1673,15 @@ default lsp-passthrough."
 ;;;
 ;;; not sure this should count as an 'appplication'
 
-(neo/use-package citar
-  :custom (citar-bibliography '("~/bib/references.bib"))
-  :hook
-  (LaTeX-mode . citar-capf-setup)
-  (org-mode . citar-capf-setup))
+;; (neo/use-package citar
+;;   :custom (citar-bibliography '("~/bib/references.bib"))
+;;   :hook
+;;   (LaTeX-mode . citar-capf-setup)
+;;   (org-mode . citar-capf-setup))
 
-(neo/use-package citar-org-roam
-  :after (citar org-roam)
-  :config (citar-org-roam-mode))
+;; (neo/use-package citar-org-roam
+;;   :after (citar org-roam)
+;;   :config (citar-org-roam-mode))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Org
