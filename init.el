@@ -1456,6 +1456,18 @@ default lsp-passthrough."
 (setenv "GOPACKAGESDRIVER" "/home/mav/uno/tools/gopackagesdriver.sh")
 
 ;;;-----------------------------------------------------------------------------------
+;;; Dev/Languages/Haskell
+
+(neo/use-package haskell-mode
+  :config
+  ;; so eglot can find haskell-language-server-wrapper
+  (add-to-list 'exec-path "/home/user/.ghcup/bin")
+  ;; so HLS can find ghc, cabal, and stack
+  (setenv "PATH" (concat "/home/user/.ghcup/bin:" (getenv "PATH")))
+  ;; start eglot session when in a haskell-mode-buffer
+  (add-hook 'haskell-mode-hook 'eglot-ensure))
+
+;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Latex
 
 (defvar neo/latex-nofill-env
