@@ -1012,7 +1012,15 @@ default lsp-passthrough."
 ;;; Dev/General
 
 (neo/use-package flycheck
-  :init (global-flycheck-mode))
+  :init (global-flycheck-mode)
+  :config
+  (setq flycheck-highlighting-mode 'lines)
+  (set-face-attribute 'flycheck-error nil
+                      :background "#FF9999"
+                      :underline nil)
+  (set-face-attribute 'flycheck-warning nil
+                      :background "#FFFF99"
+                      :underline nil))
 
 (neo/use-package flycheck-clang-analyzer
   :after flycheck
@@ -1047,7 +1055,7 @@ default lsp-passthrough."
                      :flake8 (:enabled t))))
                   ;		  (:gopls . (:verboseOutput t))
                   ))
-
+  :custom (eglot-autoshutdown t)
   :bind
   (("C-c l c" . eglot-reconnect)
    ("C-c l d" . flymake-show-buffer-diagnostics)
@@ -1058,6 +1066,7 @@ default lsp-passthrough."
    ("C-c l s" . eglot-shutdown))
   :hook
   ((python-mode . eglot-ensure)
+   (haskell-mode . eglot-ensure)
    (go-mode . eglot-ensure)
    (go-ts-mode . eglot-ensure)
    (c++-ts-mode . eglot-ensure)
