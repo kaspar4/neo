@@ -1012,15 +1012,18 @@ default lsp-passthrough."
 ;;; Dev/General
 
 (neo/use-package flycheck
-  :init (global-flycheck-mode)
-  :config
-  (setq flycheck-highlighting-mode 'lines)
-  (set-face-attribute 'flycheck-error nil
-                      :background "#FF9999"
-                      :underline nil)
-  (set-face-attribute 'flycheck-warning nil
-                      :background "#FFFF99"
-                      :underline nil))
+  :init (global-flycheck-mode))
+
+(add-hook
+ 'elpaca-after-init-hook
+ (lambda ()
+   (setq flycheck-highlighting-mode 'lines)
+   (set-face-attribute 'flycheck-error nil
+                       :background "#FF9999"
+                       :underline nil)
+   (set-face-attribute 'flycheck-warning nil
+                       :background "#FFFF99"
+                       :underline nil)))
 
 (neo/use-package flycheck-clang-analyzer
   :after flycheck
@@ -1396,6 +1399,14 @@ default lsp-passthrough."
 (neo/use-package elisp-autofmt
   :commands (elisp-autofmt-mode elisp-autofmt-buffer)
   :hook (emacs-lisp-mode . elisp-autofmt-mode))
+
+;;;-----------------------------------------------------------------------------------
+;;; Dev/Languages/C++
+
+(neo/use-package clang-format)
+(neo/use-package clang-format+
+  :after clang-format
+  :hook (c-mode-common . clang-format+-mode))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Bazel
