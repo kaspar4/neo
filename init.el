@@ -1015,7 +1015,7 @@ default lsp-passthrough."
   :init (global-flycheck-mode))
 
 (add-hook
- 'elpaca-after-init-hook
+ 'after-init-hook
  (lambda ()
    (setq flycheck-highlighting-mode 'lines)
    (set-face-attribute 'flycheck-error nil
