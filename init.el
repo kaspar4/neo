@@ -1995,3 +1995,7 @@ default lsp-passthrough."
    ("C-c s t" . soccer-table)))
 ;;;-----------------------------------------------------------------------------------
 ;;; TODO
+
+
+(setq elpaca-after-init-time (current-time)) ;; prevents `elpaca-after-init-hook` from running later.
+(elpaca-wait)
