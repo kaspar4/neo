@@ -1582,6 +1582,23 @@ default lsp-passthrough."
    (before-save . tide-format-before-save)))
 
 ;;;-----------------------------------------------------------------------------------
+;;; App/eat
+(neo/use-package eat
+  :hook
+  ((eat-mode
+    .
+    (lambda ()
+      (face-remap-add-relative
+       'default
+       :foreground "#ffffff"
+       :background "#000000")
+      (face-remap-add-relative
+       'fringe
+       :foreground "#ffffff"
+       :background "#000000")))))
+
+
+;;;-----------------------------------------------------------------------------------
 ;;; App/copilot
 
 ;;; TODO: investigate login
