@@ -1017,6 +1017,7 @@ default lsp-passthrough."
 (add-hook
  'after-init-hook
  (lambda ()
+   (message "Configuring flycheck faces")
    (setq flycheck-highlighting-mode 'lines)
    (set-face-attribute 'flycheck-error nil
                        :background "#FF9999"
@@ -1042,6 +1043,7 @@ default lsp-passthrough."
   ; clangd-17 not installed through package manager
   :ensure-system-package (python3-pylsp clangd-15)
   :config
+  (message "eglot config")
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd-17")))
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd-17")))
@@ -1077,7 +1079,9 @@ default lsp-passthrough."
 
 (neo/use-package flycheck-eglot
   :after (flycheck eglot)
-  :config (global-flycheck-eglot-mode 1))
+  :config
+  (global-flycheck-eglot-mode 1)
+  (message "Flycheck-eglot config"))
 
 (defun eglot-organize-imports ()
   "Offer to execute the source.organizeImports code action."
