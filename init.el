@@ -1022,6 +1022,9 @@ default lsp-passthrough."
           (lambda ()
             (message "Configuring flycheck faces")
             (setq flycheck-highlighting-mode 'lines)
+            (set-face-attribute 'flycheck-info nil
+                                :background "#A0D0A0"
+                                :underline nil)
             (set-face-attribute 'flycheck-error nil
                                 :background "#FF9999"
                                 :underline nil)
