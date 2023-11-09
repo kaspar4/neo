@@ -1014,17 +1014,21 @@ default lsp-passthrough."
 (neo/use-package flycheck
   :init (global-flycheck-mode))
 
-(add-hook
- 'after-init-hook
- (lambda ()
-   (message "Configuring flycheck faces")
-   (setq flycheck-highlighting-mode 'lines)
-   (set-face-attribute 'flycheck-error nil
-                       :background "#FF9999"
-                       :underline nil)
-   (set-face-attribute 'flycheck-warning nil
-                       :background "#FFFF99"
-                       :underline nil)))
+;;; Haven't managed to get elpaca-after-init-hook to work. Here we use the normal
+;;; after init hook, which is also use by elpaca to execute its queues (and supposedly
+;;; run elpaca-after-init-hook); because of this we use '100' to run this after
+;;; elpacs does its things.
+(add-hook 'after-init-hook
+          (lambda ()
+            (message "Configuring flycheck faces")
+            (setq flycheck-highlighting-mode 'lines)
+            (set-face-attribute 'flycheck-error nil
+                                :background "#FF9999"
+                                :underline nil)
+            (set-face-attribute 'flycheck-warning nil
+                                :background "#FFFF99"
+                                :underline nil))
+          100)
 
 (neo/use-package flycheck-clang-analyzer
   :after flycheck
@@ -1999,7 +2003,3 @@ default lsp-passthrough."
    ("C-c s t" . soccer-table)))
 ;;;-----------------------------------------------------------------------------------
 ;;; TODO
-
-
-(setq elpaca-after-init-time (current-time)) ;; prevents `elpaca-after-init-hook` from running later.
-(elpaca-wait)
