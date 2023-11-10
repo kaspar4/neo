@@ -1534,6 +1534,7 @@ default lsp-passthrough."
 (neo/use-package tex
   :elpaca (tex :host github :repo "emacs-straight/auctex")
   :ensure auctex
+  :hook ((LaTeX-mode . #'latex-preview-pane-mode))
   :config
   (add-to-list
    'TeX-command-list
@@ -1557,6 +1558,8 @@ default lsp-passthrough."
 
 (neo/use-package latex-preview-pane
   :config
+  (setq pdf-latex-command "xelatex")
+  (setq shell-escape-mode "-shell-escape")
   (setq
    preview-LaTeX-command
    '("%`%l -shell-escape \"\\nonstopmode\\nofiles\\PassOptionsToPackage{"
@@ -1590,6 +1593,7 @@ default lsp-passthrough."
     (lambda ()
       (face-remap-add-relative
        'default
+       :family "MesloLGM Nerd Font Regular"
        :foreground "#ffffff"
        :background "#000000")
       (face-remap-add-relative
