@@ -1212,6 +1212,18 @@ default lsp-passthrough."
 (neo/use-package perspective)
 
 ;;;-----------------------------------------------------------------------------------
+;;; Dev/documentation
+(neo/use-package devdocs
+  :hook
+  ((python-mode
+    .
+    (lambda () (setq-local devdocs-current-docs '("python~3.9"))))
+   (go-mode . (lambda () (setq-local devdocs-current-docs '("go"))))
+   (c++-mode
+    . (lambda () (setq-local devdocs-current-docs '("cpp")))))
+  :bind (("C-h D" . #'devdocs-lookup)))
+
+;;;-----------------------------------------------------------------------------------
 ;;; Dev/Version Control
 
 (neo/use-package magit
