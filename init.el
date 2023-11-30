@@ -1484,7 +1484,8 @@ default lsp-passthrough."
 
 ;;; TODO: this cannot be the right way. If I had more than one
 ;;; project, which I don't, I would be doomed
-(setenv "GOPACKAGESDRIVER" "/home/mav/uno/tools/gopackagesdriver.sh")
+(setenv "GOPACKAGESDRIVER"
+        "/home/mvitale/Projects/uno/tools/gopackagesdriver.sh")
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Haskell
@@ -1586,21 +1587,48 @@ default lsp-passthrough."
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/eat
-(neo/use-package eat
-  :hook
-  ((eat-mode
-    .
-    (lambda ()
-      (face-remap-add-relative
-       'default
-       :family "MesloLGM Nerd Font Regular"
-       :foreground "#ffffff"
-       :background "#000000")
-      (face-remap-add-relative
-       'fringe
-       :foreground "#ffffff"
-       :background "#000000")))))
+;; (neo/use-package eat
+;;   :init
+;;   (defface eat-term-font-0 '((t :family "MesloLGM NF"))
+;;     "Eat default face"
+;;     :group 'neo-faces)
+;;   :hook
+;;   ((eat-mode
+;;     .
+;;     (lambda ()
+;;       ;;      (set-face-attribute 'eat-term-font-0 nil :family "MesloLGM NF")
+;;       ;; (face-remap-add-relative
+;;       ;;  'eat-term-font-0
+;;       ;;
+;;       ;;  :foreground "#ffffff"
+;;       ;;  :background "#000000")
+;;       (face-remap-add-relative
+;;        'default
+;;        :family "MesloLGM NF"
+;;        :foreground "#ffffff"
+;;        :background "#000000")
+;;       (face-remap-add-relative
+;;        'fringe
+;;        :foreground "#ffffff"
+;;        :background "#000000")))))
 
+(use-package
+ eat
+ :custom (eat-default-cursor-type '((hbar 1) nil nil))
+
+ :custom-face (eat-term-font-0 ((t (:family "DejaVu Sans Mono"))))
+ :config (setq eat-kill-buffer-on-exit t) (setq eat-enable-mouse t))
+
+;; :custom
+;; (eat-term-name "neo term")
+;; (eat-term-inside-emacs "vterm")
+;; :custom-face (eat-term-font-0 ((t (:family "DejaVu Sans Mono"))))
+;; :config
+;; (setq eat-kill-buffer-on-exit t)
+;; (setq eat-enable-mouse t))
+;(evil-set-initial-state 'eat-mode 'emacs))
+
+;(eat-eshell-mode) (eat-eshell-visual-command-mode))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/copilot
