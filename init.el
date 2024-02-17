@@ -226,6 +226,15 @@
 (prefer-coding-system 'utf-8)
 (setq sentence-end-double-space nil)
 
+;; we want to create a directory when visiting a file that doesn't exist.
+;; this solution has the problem of leaving an empty directory around if
+;; we then decide not to save the file. Maybe would be better o create
+;; the directory on save
+(defun neo/ensure-parent-directories ()
+  (make-directory (file-name-directory buffer-file-name) t))
+(add-hook
+ 'find-file-not-found-functions #'neo/ensure-parent-directories)
+
 (defvar neo/backup-directory
   (expand-file-name "backups" no-littering-var-directory))
 
@@ -594,7 +603,7 @@ default lsp-passthrough."
       (expand-file-name "snippets" user-emacs-directory)))))
 
 (neo/use-package yasnippet-snippets
-  :doc "A library of sippets")
+  :doc "A library of snippets")
 
 (defun neo/expand-snippet-in-buffer (snippet major-mode buffer))
 
@@ -752,6 +761,7 @@ default lsp-passthrough."
      (setq glasses-separator "")
      (setq glasses-original-separator "")
      (setq glasses-face 'extra-bold)
+     (which-function-mode)
      (subword-mode)
      (glasses-mode))))
 
@@ -1028,7 +1038,6 @@ default lsp-passthrough."
 ;;; elpacs does its things.
 (add-hook 'after-init-hook
           (lambda ()
-            (message "Configuring flycheck faces")
             (setq flycheck-highlighting-mode 'lines)
             (set-face-attribute 'flycheck-info nil
                                 :background "#A0D0A0"
@@ -1225,7 +1234,7 @@ default lsp-passthrough."
   :hook
   ((python-mode
     .
-    (lambda () (setq-local devdocs-current-docs '("python~3.9"))))
+    (lambda () (setq-local devdocs-current-docs '("python~3.10"))))
    (go-mode . (lambda () (setq-local devdocs-current-docs '("go"))))
    (c++-mode
     . (lambda () (setq-local devdocs-current-docs '("cpp")))))
