@@ -1,12 +1,19 @@
+;;; neo --- My Emacs configuration, in its N-th reincarnation
 ;;; This is Neo -*- lexical-binding: t -*-
+
+;;; Commentary:
+
+;;; This is what I like to use. Most likely is not what you'd like to
+;;; use and vscode might serve you better.
 
 ;;; Code:
 
 ;;; matching setting in early-init.el. This is here for bug-hunter
-(setq no-littering-etc-directory
-      (expand-file-name ".litter/config" user-emacs-directory))
-(setq no-littering-var-directory
-      (expand-file-name ".litter/data" user-emacs-directory))
+(setq-default no-littering-etc-directory
+              (expand-file-name ".litter/config"
+                                user-emacs-directory))
+(setq-default no-littering-var-directory
+              (expand-file-name ".litter/data" user-emacs-directory))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Neo utilities
@@ -217,6 +224,7 @@
 (setq vc-handled-backends nil)
 
 (prefer-coding-system 'utf-8)
+(setq sentence-end-double-space nil)
 
 (defvar neo/backup-directory
   (expand-file-name "backups" no-littering-var-directory))
