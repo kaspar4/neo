@@ -62,7 +62,7 @@
 ;;;-----------------------------------------------------------------------------------
 ;;; Packages
 
-(defvar elpaca-installer-version 0.5)
+(defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory
   (expand-file-name "elpaca/" no-littering-etc-directory))
 (defvar elpaca-builds-directory
@@ -269,10 +269,13 @@
 ;;; Write protect
 
 ;;; This is special and works for me. Shouldn't impact anybody else. Unless you're me
-(defvar neo/monorepo-admin "mav")
-(defvar neo/monorepo-path (expand-file-name (format "~/uno")))
+(defvar neo/monorepo-admin "mvitale")
+(defvar neo/monorepo-path
+  (expand-file-name (format "~/Projects/uno")))
 
 (defun neo/monorepo ()
+  ;  "Check if we're in the uno monorepo."
+  ; not sure what this is doing
   (if (and (equal (user-login-name) neo/monorepo-admin)
            (file-directory-p neo/monorepo-path))
       neo/monorepo-path))
@@ -280,10 +283,12 @@
 (defvar neo/protect-neo-files t) ; set to nil when really intentional, but DNL
 
 (defun neo/neo-file-p (file)
-  (and neo/protect-neo-files (string-prefix-p "/home/mav/neo/" file)))
+  "Check if FILE is part of neo, in that case t else nil."
+  (and neo/protect-neo-files
+       (string-prefix-p "/home/mvitale/neo/" file)))
 
 (defun neo/maybe-write-protect ()
-  (if (and (neo/monorepo) (neo/neo-file-p (buffer-file-name)))
+  (if (and (neo/monorepo) (neo/neo-file-p (buffer-file-name))) ;
       (progn
         (setq buffer-read-only t))))
 
@@ -297,6 +302,32 @@
         "You probably want to edit this file inside the monorepo at %s"
         neo/monorepo-path))
     ad-do-it))
+
+;;; We don't want to edit ~/neo/init.el directly, but when we do edit
+;;; ~/Projects/uno/devex/editors/emacs/init.el we copy it to
+;;; ~/neo/init.el for testing purposes, as pushing to github, creating
+;;; a PR, merging, syncying to the public repo with copybara and
+;;; pulling is annoying. We don't touch the repository in ~/neo so
+;;; that it is easy to revert.
+(defun neo/copy-init-on-save ()
+  "Copy init.el to where Emacs does normally look for it after saving."
+  (when
+      (and
+       buffer-file-name ; Ensure the buffer is associated with a file.
+       (file-exists-p buffer-file-name)
+       (string=
+        buffer-file-name
+        "/home/mvitale/Projects/uno/devex/editors/emacs/init.el"))
+    (let
+        ((target-directory (expand-file-name "~/neo/"))) ; Set your target directory.
+      (let ((target-path
+             (concat
+              target-directory
+              (file-name-nondirectory buffer-file-name))))
+        (copy-file buffer-file-name target-path t))))) ; 't' to overwrite if it exists.
+
+(add-hook 'after-save-hook #'neo/copy-init-on-save)
+
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Restart Emacs
@@ -446,6 +477,118 @@
   (marginalia-align 'left)
   (marginalia-align-offset 16)
   :init (marginalia-mode))
+
+(neo/use-package consult)
+;; ;;  :bind (("M-s G" . consult-git-grep))
+;;   ;;   :bind
+;;   ;;    ("C-c h" . consult-history)
+;;   ;;    ;; ("C-c m" . consult-mode-command)
+;;   ;;    ;; ("C-c b" . consult-bookmark)
+;;   ;;    ;; ("C-c k" . consult-kmacro)
+;;   ;;    ;; ;; C-x bindings (ctl-x-map)
+;;   ;;    ;; ("C-x M-:" . consult-complex-command) ;; orig. repeat-complex-command
+;;   ;;    ;; ("C-x b" . consult-buffer) ;; orig. switch-to-buffer
+;;   ;;    ;; ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+;;   ;;    ;; ("C-x 5 b" . consult-buffer-other-frame) ;; orig. switch-to-buffer-other-frame
+;;   ;;    ;; ;; Custom M-# bindings for fast register access
+;;   ;;    ;; ("M-#" . consult-register-load)
+;;   ;;    ;; ("M-'" . consult-register-store) ;; orig. abbrev-prefix-mark (unrelated)
+;;   ;;    ;; ("C-M-#" . consult-register)
+;;   ;;    ;; ;; Other custom bindings
+;;   ;;    ;; ("M-y" . consult-yank-pop) ;; orig. yank-pop
+;;   ;;    ;; ;; M-g bindings (goto-map)
+;;   ;;    ;; ("M-g e" . consult-compile-error)
+;;   ;;    ;; ("M-g f" . consult-flymake) ;; Alternative: consult-flycheck
+;;   ;;    ;; ("M-g g" . consult-goto-line) ;; orig. goto-line
+;;   ;;    ;; ("M-g M-g" . consult-goto-line) ;; orig. goto-line
+;;   ;;    ;; ("M-g o" . consult-outline) ;; Alternative: consult-org-heading
+;;   ;;    ;; ("M-g m" . consult-mark)
+;;   ;;    ;; ("M-g k" . consult-global-mark)
+;;   ;;    ;; ("M-g i" . consult-imenu)
+;;   ;;    ;; ("M-g I" . consult-imenu-multi)
+;;   ;;    ;; ;; M-s bindings (search-map)
+;;   ;;    ;; ("M-s f" . consult-find)
+;;   ;;    ;; ("M-s L" . consult-locate)
+;;   ;;    ;; ("M-s g" . consult-grep)
+;;   ;;    ;; ("M-s G" . consult-git-grep)
+;;   ;;    ;; ("M-s r" . consult-ripgrep)
+;;   ;;    ;; ("M-s l" . consult-line)
+;;   ;;    ;; ("M-s m" . consult-line-multi)
+;;   ;;    ;; ("M-s k" . consult-keep-lines)
+;;   ;;    ;; ("M-s u" . consult-focus-lines)
+;;   ;;    ;; ;; Isearch integration
+;;   ;; ;;   ("M-s e" . consult-isearch-history)
+;;   ;;    :map
+;;   ;;    isearch-mode-map
+;;   ;;    ("M-e" . consult-isearch-history) ;; orig. isearch-edit-string
+;;   ;;    ("M-s e" . consult-isearch-history) ;; orig. isearch-edit-string
+;;   ;;    ("M-s l" . consult-line)) ;; needed by consult-line to detect isearch
+
+;;   (setq
+;;    register-preview-delay 0
+;;    register-preview-function #'consult-register-format)
+
+;;   ;; Optionally tweak the register preview window.
+;;   ;; This adds thin lines, sorting and hides the mode line of the window.
+;;   (advice-add #'register-preview :override #'consult-register-window)
+
+;;   ;; Configure other variables and modes in the :config section,
+;;   ;; after lazily loading the package.
+;;   :config
+
+;;   ;; disable automatic preview by default,
+;;   ;; selectively enable it for some prompts below.
+;;   (setq consult-preview-key '("M-." "C-SPC"))
+
+;;   ;; customize preview activation and delay while selecting candiates
+;;   (consult-customize
+;;    consult-theme
+;;    :preview-key '("M-." "C-SPC" :debounce 0.2 any)
+
+;;    ;; slightly delayed preview upon candidate selection
+;;    ;; one usually wants quick feedback
+;;    consult-buffer
+;;    consult-ripgrep
+;;    consult-git-grep
+;;    consult-grep
+;;    consult-bookmark
+;;    consult-yank-pop
+;;    :preview-key
+;;    '("M-."
+;;      "C-SPC"
+;;      :debounce
+;;      0.3
+;;      "<up>"
+;;      "<down>"
+;;      "C-n"
+;;      "C-p"
+;;      :debounce
+;;      0.6
+;;      any))
+
+;;   ;; hide magit buffer
+;;   (add-to-list 'consult-buffer-filter "magit.*:.*")
+
+;;   (setq consult-line-start-from-top nil)
+
+;;   ;; Optionally configure the narrowing key.
+;;   ;; Both < and C-+ work reasonably well.
+;;   (setq consult-narrow-key "<") ;; (kbd "C-+")
+
+;;   ;; Optionally make narrowing help available in the minibuffer.
+;;   ;; You may want to use `embark-prefix-help-command' or which-key instead.
+;;   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+;;   ;; Make M-n as smart as ivy and helm equivalents
+;;   (setq minibuffer-default-add-function
+;;         'spacemacs/minibuffer-default-add-function)
+
+;;   ;; Optionally configure a function which returns the project root directory.
+;;   (setq consult-project-root-function
+;;         (lambda ()
+;;           (when-let (project
+;;                      (project-current))
+;;             (car (project-root project))))))
 
 (neo/use-package corfu
   :doc "Show completions near the point"
@@ -2042,18 +2185,31 @@ default lsp-passthrough."
    vterm-mode-map
    ("s-t" . #'vterm-toggle)))
 
+
 (neo/use-package eshell-vterm
   :after eshell
   :config
   (eshell-vterm-mode)
   (defalias 'eshell/v 'eshell-exec-visual))
 
-(neo/use-package esh-autosuggest
-  :hook (eshell-mode . esh-autosuggest-mode))
-
 (neo/use-package eshell-syntax-highlighting
   :after eshell-mode
   :config (eshell-syntax-highlighting-global-mode +1))
+
+;;; TODO: this often makes a mess by splitting buffers. Probably better to roll my own.
+(neo/use-package eshell-toggle
+  :custom (eshell-toggle-size-fraction 3)
+  ;  (eshell-toggle-use-projectile-root t)
+  (eshell-toggle-run-command nil)
+  (eshell-toggle-init-function #'eshell-toggle-init-eshell)
+  ;; This would be nice, but the Linux mint WM steals it
+  :bind ("s-`" . eshell-toggle))
+
+(neo/use-package eshell-fringe-status
+  ;; for some (possibly elpaca) reasons, setting the hook in use-package doesn't work
+  :hook (eshell-mode-hook . (lambda () (eshell-fringe-status-mode 1))))
+(add-hook 'eshell-mode-hook 'eshell-fringe-status-mode)
+
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Kubernetes
@@ -2082,5 +2238,38 @@ default lsp-passthrough."
   (("C-c s f" . soccer-fixtures-next)
    ("C-c s r" . soccer-results-last)
    ("C-c s t" . soccer-table)))
+
+
+;;;-----------------------------------------------------------------------------------
+;;; App
+
+;;; TODO: maybe we should allow this to exit from all magit related modes
+;;; (if (string-prefix-p "magit-" (symbol-name major-mode))
+;;;   (message "You are in a Magit-related mode.")
+;;; (message "You are not in a Magit-related mode."))
+(defun neo/magit-toggle ()
+  (interactive)
+  (if (eq major-mode 'magit-status-mode)
+      (magit-mode-bury-buffer)
+    (magit-status)))
+
+(global-set-key (kbd "s-g") 'neo/magit-toggle)
+
+;;; TODO: these toggle things should look if anywhere a buffer in that mode is
+;;; displayed, so that we can close from another window.
+(defun neo/calendar-toggle ()
+  (interactive)
+  (if (eq major-mode 'calendar-mode)
+      (calendar-exit)
+    (calendar)))
+(global-set-key (kbd "s-c") 'neo/calendar-toggle)
+
+(defun neo/eshell-toggle ()
+  (interactive)
+  (if (eq major-mode 'eshell-mode)
+      (eshell/exit)
+    (eshell)))
+(global-set-key (kbd "s-s") 'eshell-toggle)
+
 ;;;-----------------------------------------------------------------------------------
 ;;; TODO
