@@ -20,6 +20,8 @@
 
 (require 'map)
 
+;;; TODO: elisp autocompletion on :custom should be for variables, not functions)
+
 ;;; ensure-system-package uses an async buffer (in a side window) which in turns
 ;;; causes the dashboard to be locked in there, a small window at the bottom of the
 ;;; frame that cannot even been grown.
@@ -37,6 +39,25 @@
     (mapc (lambda (el) (setq args (map-delete args el))) ignore-list)
     args))
 
+;;; TODO ideally we should add this after :disabled, but :chord is also added at the beginning
+;;; so meh
+;; (add-to-list 'use-package-keywords :var)
+
+;; (defun use-package-normalize/:var (name-symbol keyword args)
+;;   (message args)
+;;   (use-package-only-one
+;;    (symbol-name keyword) args
+;;    (lambda (label arg)
+;;      (cond
+;;       ((stringp arg)
+;;        arg)
+;;       ((symbolp arg)
+;;        (symbol-name arg))
+;;       (t
+;;        (use-package-error
+;;         ":pin wants an archive name (a string)"))))))
+
+;;; TODO: add a key 'var' and automatically split between :config and :custom
 (defmacro neo/use-package (name &rest args)
   "Augment 'use-package' with Neo specific functionality.
 
@@ -363,6 +384,9 @@
 
 (global-set-key (kbd "C-x C-c") 'neo/restart-emacs-or-exit)
 
+;; (unless (server-running-p)
+;;   (server-start))
+
 ;;;-----------------------------------------------------------------------------------
 ;;; History
 
@@ -435,8 +459,8 @@
   )
 
 (neo/use-package vertico-posframe
-  :doe "Display vertico selections in a popup window"
-  :disabled ; not sure if I want it or not
+  :doc "Display vertico selections in a popup window"
+  ;  :disabled ; not sure if I want it or not
   :after vertico
   :config (vertico-posframe-mode 1))
 
@@ -478,16 +502,25 @@
   (marginalia-align-offset 16)
   :init (marginalia-mode))
 
-(neo/use-package consult)
-;; ;;  :bind (("M-s G" . consult-git-grep))
-;;   ;;   :bind
+(defun neo/consult-outline ()
+  (interactive)
+  (if (eq major-mode 'org-mode)
+      (consult-org-heading)
+    (consult-outline)))
+
+(neo/use-package consult
+  :bind
+  ("M-s G" . consult-git-grep)
+  ("C-x b" . consult-buffer)
+  ("M-g o" . neo/consult-outline))
+
 ;;   ;;    ("C-c h" . consult-history)
 ;;   ;;    ;; ("C-c m" . consult-mode-command)
 ;;   ;;    ;; ("C-c b" . consult-bookmark)
 ;;   ;;    ;; ("C-c k" . consult-kmacro)
 ;;   ;;    ;; ;; C-x bindings (ctl-x-map)
 ;;   ;;    ;; ("C-x M-:" . consult-complex-command) ;; orig. repeat-complex-command
-;;   ;;    ;; ("C-x b" . consult-buffer) ;; orig. switch-to-buffer
+;;   ;;    ;;
 ;;   ;;    ;; ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
 ;;   ;;    ;; ("C-x 5 b" . consult-buffer-other-frame) ;; orig. switch-to-buffer-other-frame
 ;;   ;;    ;; ;; Custom M-# bindings for fast register access
@@ -790,6 +823,47 @@ default lsp-passthrough."
 
 ;;; Note: some appearence settings happen in early-init.el in order to minimize flashing/flickering on startup.
 
+;;; TODO: for some reason golden-ratio doesn't work, probably conflictin with something
+;;; ace-window?
+(neo/use-package golden-ratio
+  :after ace-window
+  :diminish golden-ratio-mode
+  :config
+  (golden-ratio-mode 1)
+  (add-to-list 'golden-ratio-extra-commands 'aw--callback)
+  :custom
+  ;  (golden-ratio-auto-scale t)
+  (golden-ratio-exclude-modes
+   '("calendar-mode" "help-mode" "helpful-mode")))
+
+;;; The following are workarounds for ace-window.
+;;; golden-ratio is essentially unmaintained. If even these workarounds stop working
+;;; we'll do without golden-ratio
+(defvar golden-ratio-selected-window (frame-selected-window)
+  "Selected window.")
+
+(defun golden-ratio-set-selected-window (&optional window)
+  "Set selected window to WINDOW."
+  (setq-default golden-ratio-selected-window
+                (or window (frame-selected-window))))
+
+(defun golden-ratio-selected-window-p (&optional window)
+  "Return t if WINDOW is selected window."
+  (eq
+   (or window (selected-window))
+   (default-value 'golden-ratio-selected-window)))
+
+(defun golden-ratio-maybe (&optional arg)
+  "Run `golden-ratio' if `golden-ratio-selected-window-p' returns nil."
+  (interactive "p")
+  (unless (golden-ratio-selected-window-p)
+    (golden-ratio-set-selected-window)
+    (golden-ratio arg)))
+
+(add-hook 'buffer-list-update-hook #'golden-ratio-maybe)
+(add-hook 'focus-in-hook #'golden-ratio)
+(add-hook 'focus-out-hook #'golden-ratio)
+
 (neo/use-package all-the-icons
   :config (neo/maybe-install-fonts))
 
@@ -1057,6 +1131,7 @@ default lsp-passthrough."
 
 (add-hook 'after-init-hook #'neo/set-fonts 100)
 
+
 ;;; Themes
 
 (neo/use-package blackboard-theme)
@@ -1149,7 +1224,6 @@ default lsp-passthrough."
 (neo/use-package svg-tag-mode)
 
 (neo/use-package diminish)
-
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Help
@@ -1539,10 +1613,18 @@ default lsp-passthrough."
 
 (neo/use-package macrostep)
 
+;;; Some buffers don't work well with hilight-defined.
+;;; One case is the help-mode buffer produced by list-faces-display, so we
+;;; skip those
+(defun neo/maybe-highlight-defined ()
+  (cond
+   ((not (string= (buffer-name) "*Faces*"))
+    (highlight-defined-mode))))
+
 (neo/use-package highlight-defined
   :custom (highlight-defined-face-use-itself t)
   :hook
-  (help-mode . highlight-defined-mode)
+  (help-mode . neo/maybe-highlight-defined)
   (emacs-lisp-mode . highlight-defined-mode))
 
 (neo/use-package highlight-quoted
@@ -1582,6 +1664,12 @@ default lsp-passthrough."
 (neo/use-package elisp-autofmt
   :commands (elisp-autofmt-mode elisp-autofmt-buffer)
   :hook (emacs-lisp-mode . elisp-autofmt-mode))
+
+;;;-----------------------------------------------------------------------------------
+;;; Dev/Languages/Rust
+
+(neo/use-package rust-mode
+  :hook (rust-mode . eglot-ensure))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/C++
@@ -1810,6 +1898,7 @@ default lsp-passthrough."
   :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t)
 
+
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Dashboard
 
@@ -1950,205 +2039,217 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Org
 
+;;; org-mdern is convenient, but
+;;; TODO: we probably be better served by having our own open configuration
 (neo/use-package org-modern
-  :config
-  (setq org-startup-with-inline-images t)
-  (add-to-list
-   'ispell-skip-region-alist
-   '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:"))
-  (add-to-list
-   'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC"))
-  (add-to-list
-   'ispell-skip-region-alist
-   '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
-  (setq
-   org-capture-templates
-   `(("p"
-      "Protocol"
-      entry
-      (file+headline ,(concat org-directory "notes.org") "Inbox")
-      "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
-     ("L"
-      "Protocol Link"
-      entry
-      (file+headline ,(concat org-directory "notes.org") "Inbox")
-      "* %? [[%:link][%:description]] \nCaptured On: %U")))
+  :custom (org-startup-with-inline-images t)
   :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
   (org-babel-after-execute . org-redisplay-inline-images)
   (org-mode . variable-pitch-mode)
   (org-mode . visual-line-mode))
 
-;;; org-capture
-;;
-;; in ~/.local/share/applications/org-protocol.desktop:
-;; [Desktop Entry]
-;; Name=org-protocol
-;; Exec=emacsclient %u
-;; Type=Application
-;; Terminal=false
-;; Categories=System;
-;; MimeType=x-scheme-handler/org-protocol;
-;;
-;; Run update-desktop-database ~/.local/share/applications/
-;;
-;; sudo mkdir -p /etc/opt/chrome/policies/managed/
-;; sudo tee /etc/opt/chrome/policies/managed/external_protocol_dialog.json >/dev/null <<'EOF'
-;; {
-;;   "ExternalProtocolDialogShowAlwaysOpenCheckbox": true
-;; }
-;; EOF
-;; sudo chmod 644 /etc/opt/chrome/policies/managed/external_protocol_dialog.json
-;;
-;; Install the chrome extension from https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc
-;;
+
+;; (neo/use-package org-modern
+;;   :config
+;;   (setq org-startup-with-inline-images t)
+;;   (add-to-list
+;;    'ispell-skip-region-alist
+;;    '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:"))
+;;   (add-to-list
+;;    'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC"))
+;;   (add-to-list
+;;    'ispell-skip-region-alist
+;;    '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
+;;   (setq
+;;    org-capture-templates
+;;    `(("p"
+;;       "Protocol"
+;;       entry
+;;       (file+headline ,(concat org-directory "notes.org") "Inbox")
+;;       "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+;;      ("L"
+;;       "Protocol Link"
+;;       entry
+;;       (file+headline ,(concat org-directory "notes.org") "Inbox")
+;;       "* %? [[%:link][%:description]] \nCaptured On: %U")))
+;;   :hook
+;;   (org-babel-after-execute . org-redisplay-inline-images)
+;;   (org-mode . variable-pitch-mode)
+;;   (org-mode . visual-line-mode))
+
+;; ;;; org-capture
+;; ;;
+;; ;; in ~/.local/share/applications/org-protocol.desktop:
+;; ;; [Desktop Entry]
+;; ;; Name=org-protocol
+;; ;; Exec=emacsclient %u
+;; ;; Type=Application
+;; ;; Terminal=false
+;; ;; Categories=System;
+;; ;; MimeType=x-scheme-handler/org-protocol;
+;; ;;
+;; ;; Run update-desktop-database ~/.local/share/applications/
+;; ;;
+;; ;; sudo mkdir -p /etc/opt/chrome/policies/managed/
+;; ;; sudo tee /etc/opt/chrome/policies/managed/external_protocol_dialog.json >/dev/null <<'EOF'
+;; ;; {
+;; ;;   "ExternalProtocolDialogShowAlwaysOpenCheckbox": true
+;; ;; }
+;; ;; EOF
+;; ;; sudo chmod 644 /etc/opt/chrome/policies/managed/external_protocol_dialog.json
+;; ;;
+;; ;; Install the chrome extension from https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc
+;; ;;
+
+;; TODO: this or the required server-start seems to make Emacs hang on normal things
+;; (neo/use-package org-protocol
+;;   :elpaca nil ; part of org
+;;   )
+
+;; (neo/use-package ob-mermaid
+;;   :after org-modern
+;;   :ensure-system-package
+;;   (mermaid
+;;    .
+;;    "[ ! -d /usr/local/lib/node_modules/mermaid.cli ] && sudo npm install -g mermaid.cli")
+;;   :ensure-system-package ditaa
+;;   :config
+;;   (org-babel-do-load-languages
+;;    'org-babel-load-languages
+;;    '((mermaid . t) (ditaa . t) (shell . t) (dot . t) (scheme . t)))
+;;   (setq org-confirm-babel-evaluate nil)
+;;   (defun neo/org-confirm-babel-evaluate (lang body)
+;;     (not (string= lang "mermaid")))
+;;   ;; Fix for including SVGs
+;;   (setq
+;;    org-latex-pdf-process
+;;    '("%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
+;;      "bibtex %b"
+;;      "%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
+;;      "%latex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+;;   (setq org-confirm-babel-evaluate 'neo/org-confirm-babel-evaluate)
+;;   (setq
+;;    org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
+;;    org-confirm-babel-evaluate nil
+;;    ;; Edit settings
+;;    org-auto-align-tags nil
+;;    org-tags-column 0
+;;    org-catch-invisible-edits 'show-and-error
+;;    org-special-ctrl-a/e t
+;;    org-insert-heading-respect-content t
+
+;;    ;; Org styling, hide markup etc.
+;;    org-hide-emphasis-markers t
+;;    org-pretty-entities t
+;;    org-ellipsis "…"
+
+;;    ;; Agenda styling
+;;    org-agenda-tags-column 0
+;;    org-agenda-block-separator ?─
+;;    org-agenda-time-grid
+;;    '((daily today require-timed)
+;;      (800 1000 1200 1400 1600 1800 2000)
+;;      " ┄┄┄┄┄ "
+;;      "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+;;    org-agenda-current-time-string "⭠ now ─────────────────────────────────────────────────")
+;;   (global-org-modern-mode))
+
+;; (neo/use-package org-tempo
+;;   :elpaca nil ; part of org
+;;   :after org
+;;   :config
+;;   (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+;;   (add-to-list 'org-structure-template-alist '("b" . "src bash"))
+;;   (add-to-list
+;;    'org-structure-template-alist '("el" . "src emacs-lisp"))
+;;   (add-to-list 'org-structure-template-alist '("py" . "src python"))
+;;   (add-to-list 'org-structure-template-alist '("go" . "src go"))
+;;   (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
+;;   (add-to-list 'org-structure-template-alist '("json" . "src json")))
 
 
-(neo/use-package org-protocol
-  :elpaca nil ; part of org
-  )
+;; (neo/use-package org-tidy
+;;   :config (add-hook 'org-mode-hook #'org-tidy-mode))
 
-(neo/use-package ob-mermaid
-  :after org-modern
-  :ensure-system-package
-  (mermaid
-   .
-   "[ ! -d /usr/local/lib/node_modules/mermaid.cli ] && sudo npm install -g mermaid.cli")
-  :ensure-system-package ditaa
-  :config
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((mermaid . t) (ditaa . t) (shell . t) (dot . t) (scheme . t)))
-  (setq org-confirm-babel-evaluate nil)
-  (defun neo/org-confirm-babel-evaluate (lang body)
-    (not (string= lang "mermaid")))
-  ;; Fix for including SVGs
-  (setq
-   org-latex-pdf-process
-   '("%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "bibtex %b"
-     "%latex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "%latex -shell-escape -interaction nonstopmode -output-directory %o %f"))
-  (setq org-confirm-babel-evaluate 'neo/org-confirm-babel-evaluate)
-  (setq
-   org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
-   org-confirm-babel-evaluate nil
-   ;; Edit settings
-   org-auto-align-tags nil
-   org-tags-column 0
-   org-catch-invisible-edits 'show-and-error
-   org-special-ctrl-a/e t
-   org-insert-heading-respect-content t
+;; ;;; TODO: once we setup agenda and todo list, use this to show agenda items on the side
+;; (neo/use-package org-sidebar)
 
-   ;; Org styling, hide markup etc.
-   org-hide-emphasis-markers t
-   org-pretty-entities t
-   org-ellipsis "…"
+;; ;;; TODO: this is only an inspiration; I'd like to roll my own that integrates
+;; ;;; runbook and incident reports
+;; (neo/use-package org-runbook)
 
-   ;; Agenda styling
-   org-agenda-tags-column 0
-   org-agenda-block-separator ?─
-   org-agenda-time-grid
-   '((daily today require-timed)
-     (800 1000 1200 1400 1600 1800 2000)
-     " ┄┄┄┄┄ "
-     "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-   org-agenda-current-time-string "⭠ now ─────────────────────────────────────────────────")
-  (global-org-modern-mode))
+;; (neo/use-package org-appear
+;;   :hook (org-mode . org-appear-mode))
 
-(neo/use-package org-tempo
-  :elpaca nil ; part of org
-  :after org
-  :config
-  (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
-  (add-to-list 'org-structure-template-alist '("b" . "src bash"))
-  (add-to-list
-   'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python"))
-  (add-to-list 'org-structure-template-alist '("go" . "src go"))
-  (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
-  (add-to-list 'org-structure-template-alist '("json" . "src json")))
+;; (neo/use-package org-roam
+;;   :elpaca
+;;   (:host
+;;    github
+;;    :repo "org-roam/org-roam"
+;;    :files (:defaults "extensions/*"))
+;;   :custom (org-roam-directory (file-truename "~/org-roam/"))
+;;   :bind
+;;   (("C-c n f" . #'org-roam-node-find)
+;;    ("C-c n g" . #'org-roam-graph)
+;;    ("C-c n t" . #'org-roam-tag-add)
+;;    ("C-c n o" . #'org-id-get-create)
+;;    ("C-c n a" . #'org-roam-alias-add)
+;;    ("C-c n i" . #'org-roam-node-insert)
+;;    ("C-c n c" . #'org-roam-capture)
+;;    ("C-c n :" . #'org-roam-buffer-toggle)
+;;    ("C-c n j" . #'org-roam-dailies-capture-today))
+;;   :config
+;;   ;; (setq org-roam-dailies-directory "daily/")
 
+;;   ;; (setq org-roam-dailies-capture-templates
+;;   ;;       '(("d" "default" entry
+;;   ;;          "* %?"
 
-(neo/use-package org-tidy
-  :config (add-hook 'org-mode-hook #'org-tidy-mode))
+;;   ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
+;;   ;;               "#+title: %<%Y-%m-%d>\n"))))
 
-;;; TODO: once we setup agenda and todo list, use this to show agenda items on the side
-(neo/use-package org-sidebar)
-
-;;; TODO: this is only an inspiration; I'd like to roll my own that integrates
-;;; runbook and incident reports
-(neo/use-package org-runbook)
-
-(neo/use-package org-appear
-  :hook (org-mode . org-appear-mode))
-
-(neo/use-package org-roam
-  :elpaca
-  (:host
-   github
-   :repo "org-roam/org-roam"
-   :files (:defaults "extensions/*"))
-  :custom (org-roam-directory (file-truename "~/org-roam/"))
-  :bind
-  (("C-c n f" . #'org-roam-node-find)
-   ("C-c n g" . #'org-roam-graph)
-   ("C-c n t" . #'org-roam-tag-add)
-   ("C-c n o" . #'org-id-get-create)
-   ("C-c n a" . #'org-roam-alias-add)
-   ("C-c n i" . #'org-roam-node-insert)
-   ("C-c n c" . #'org-roam-capture)
-   ("C-c n :" . #'org-roam-buffer-toggle)
-   ("C-c n j" . #'org-roam-dailies-capture-today))
-  :config
-  ;; (setq org-roam-dailies-directory "daily/")
-
-  ;; (setq org-roam-dailies-capture-templates
-  ;;       '(("d" "default" entry
-  ;;          "* %?"
-
-  ;;      :target ((format "message" format-args)ile+head "%<%Y-%m-%d>.org"
-  ;;               "#+title: %<%Y-%m-%d>\n"))))
-
-  (cl-defmethod org-roam-node-type ((node org-roam-node))
-    "Return the TYPE of NODE."
-    (condition-case nil
-        (file-name-nondirectory
-         (directory-file-name
-          (file-name-directory
-           (file-relative-name (org-roam-node-file node)
-                               org-roam-directory))))
-      (error "")))
-  ;; If you're using a vertical completion framework, you might want a more informative completion interface
-  (setq org-roam-node-display-template
-        (concat
-         "${type:15} ${title:*} "
-         (propertize "${tags:10}" 'face 'org-tag)))
-  (org-roam-db-autosync-mode)
-  (setq
-   org-roam-capture-templates
-   '(("m"
-      "main"
-      plain
-      "%?"
-      :if-new (file+head "main/${slug}.org" "#+title: ${title}\n")
-      :immediate-finish t
-      :unnarrowed t)
-     ("r"
-      "reference"
-      plain
-      "%?"
-      :if-new (file+head "reference/${title}.org" "#+title: ${title}\n")
-      :immediate-finish t
-      :unnarrowed t)
-     ("a" "article" plain "%?"
-      :if-new
-      (file+head
-       "articles/${title}.org"
-       "#+title: ${title}\n#+filetags: :article:\n")
-      :immediate-finish t
-      :unnarrowed t)))
-  ;; If using org-roam-protocol
-  (require 'org-roam-protocol))
+;;   (cl-defmethod org-roam-node-type ((node org-roam-node))
+;;     "Return the TYPE of NODE."
+;;     (condition-case nil
+;;         (file-name-nondirectory
+;;          (directory-file-name
+;;           (file-name-directory
+;;            (file-relative-name (org-roam-node-file node)
+;;                                org-roam-directory))))
+;;       (error "")))
+;;   ;; If you're using a vertical completion framework, you might want a more informative completion interface
+;;   (setq org-roam-node-display-template
+;;         (concat
+;;          "${type:15} ${title:*} "
+;;          (propertize "${tags:10}" 'face 'org-tag)))
+;;   (org-roam-db-autosync-mode)
+;;   (setq
+;;    org-roam-capture-templates
+;;    '(("m"
+;;       "main"
+;;       plain
+;;       "%?"
+;;       :if-new (file+head "main/${slug}.org" "#+title: ${title}\n")
+;;       :immediate-finish t
+;;       :unnarrowed t)
+;;      ("r"
+;;       "reference"
+;;       plain
+;;       "%?"
+;;       :if-new (file+head "reference/${title}.org" "#+title: ${title}\n")
+;;       :immediate-finish t
+;;       :unnarrowed t)
+;;      ("a" "article" plain "%?"
+;;       :if-new
+;;       (file+head
+;;        "articles/${title}.org"
+;;        "#+title: ${title}\n#+filetags: :article:\n")
+;;       :immediate-finish t
+;;       :unnarrowed t)))
+;;   ;; If using org-roam-protocol
+;;   (require 'org-roam-protocol))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; App/Presentations
@@ -2225,6 +2326,18 @@ default lsp-passthrough."
 (neo/use-package bluetooth)
 
 ;;;-----------------------------------------------------------------------------------
+;;; App/ChatGPT
+
+;;; get a token from https://platform.openai.com/account/api-keys
+(defun neo/get-chatgpt-token ()
+  (let ((credentials (auth-source-search :host "chatgpt")))
+    (funcall (plist-get (car credentials) :secret))))
+
+(use-package
+ chatgpt-shell
+ :custom ((chatgpt-shell-openai-key (neo/get-chatgpt-token))))
+
+;;;-----------------------------------------------------------------------------------
 ;;; Fun
 
 (neo/use-package xkcd)
@@ -2270,6 +2383,11 @@ default lsp-passthrough."
       (eshell/exit)
     (eshell)))
 (global-set-key (kbd "s-s") 'eshell-toggle)
+
+;;; TODO: should save windows and then go full frame
+(global-set-key (kbd "s-d") 'dashboard-open)
+
+(global-set-key (kbd "s-p") 'elpaca-manager)
 
 ;;;-----------------------------------------------------------------------------------
 ;;; TODO
