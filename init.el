@@ -825,44 +825,46 @@ default lsp-passthrough."
 
 ;;; TODO: for some reason golden-ratio doesn't work, probably conflictin with something
 ;;; ace-window?
-(neo/use-package golden-ratio
-  :after ace-window
-  :diminish golden-ratio-mode
-  :config
-  (golden-ratio-mode 1)
-  (add-to-list 'golden-ratio-extra-commands 'aw--callback)
-  :custom
-  ;  (golden-ratio-auto-scale t)
-  (golden-ratio-exclude-modes
-   '("calendar-mode" "help-mode" "helpful-mode")))
+;;; TODO: there's a workaround below, but if for any reason golden-ratio is not defined (error elsewhere + elpaca)
+;;; then emacs becoems basically unusable
+;; (neo/use-package golden-ratio
+;;   :after ace-window
+;;   :diminish golden-ratio-mode
+;;   :config
+;;   (golden-ratio-mode 1)
+;;   (add-to-list 'golden-ratio-extra-commands 'aw--callback)
+;;   :custom
+;;   ;  (golden-ratio-auto-scale t)
+;;   (golden-ratio-exclude-modes
+;;    '("calendar-mode" "help-mode" "helpful-mode")))
 
-;;; The following are workarounds for ace-window.
-;;; golden-ratio is essentially unmaintained. If even these workarounds stop working
-;;; we'll do without golden-ratio
-(defvar golden-ratio-selected-window (frame-selected-window)
-  "Selected window.")
+;; ;;; The following are workarounds for ace-window.
+;; ;;; golden-ratio is essentially unmaintained. If even these workarounds stop working
+;; ;;; we'll do without golden-ratio
+;; (defvar golden-ratio-selected-window (frame-selected-window)
+;;   "Selected window.")
 
-(defun golden-ratio-set-selected-window (&optional window)
-  "Set selected window to WINDOW."
-  (setq-default golden-ratio-selected-window
-                (or window (frame-selected-window))))
+;; (defun golden-ratio-set-selected-window (&optional window)
+;;   "Set selected window to WINDOW."
+;;   (setq-default golden-ratio-selected-window
+;;                 (or window (frame-selected-window))))
 
-(defun golden-ratio-selected-window-p (&optional window)
-  "Return t if WINDOW is selected window."
-  (eq
-   (or window (selected-window))
-   (default-value 'golden-ratio-selected-window)))
+;; (defun golden-ratio-selected-window-p (&optional window)
+;;   "Return t if WINDOW is selected window."
+;;   (eq
+;;    (or window (selected-window))
+;;    (default-value 'golden-ratio-selected-window)))
 
-(defun golden-ratio-maybe (&optional arg)
-  "Run `golden-ratio' if `golden-ratio-selected-window-p' returns nil."
-  (interactive "p")
-  (unless (golden-ratio-selected-window-p)
-    (golden-ratio-set-selected-window)
-    (golden-ratio arg)))
+;; (defun golden-ratio-maybe (&optional arg)
+;;   "Run `golden-ratio' if `golden-ratio-selected-window-p' returns nil."
+;;   (interactive "p")
+;;   (unless (golden-ratio-selected-window-p)
+;;     (golden-ratio-set-selected-window)
+;;     (golden-ratio arg)))
 
-(add-hook 'buffer-list-update-hook #'golden-ratio-maybe)
-(add-hook 'focus-in-hook #'golden-ratio)
-(add-hook 'focus-out-hook #'golden-ratio)
+;; (add-hook 'buffer-list-update-hook #'golden-ratio-maybe)
+;; (add-hook 'focus-in-hook #'golden-ratio)
+;; (add-hook 'focus-out-hook #'golden-ratio)
 
 (neo/use-package all-the-icons
   :config (neo/maybe-install-fonts))
@@ -1309,7 +1311,7 @@ default lsp-passthrough."
    ("C-c l f b" . eglot-format-buffer)
    ("C-c l l" . eglot)
    ("C-c l r n" . eglot-rename)
-   ("C-c l s" . eglot-shutdown))
+   ("C-c l s" . eglot-shutdowmen))
   :hook
   ((python-mode . eglot-ensure)
    (haskell-mode . eglot-ensure)
@@ -1322,7 +1324,7 @@ default lsp-passthrough."
   :after (flycheck eglot)
   :config
   (global-flycheck-eglot-mode 1)
-  (message "Flycheck-eglot config"))
+  (message "Flycheck-eglot config. Why we show this"))
 
 (defun eglot-organize-imports ()
   "Offer to execute the source.organizeImports code action."
@@ -1668,8 +1670,15 @@ default lsp-passthrough."
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/Rust
 
+;;; TODO: doesn't seem we are setting the hook properly
 (neo/use-package rust-mode
-  :hook (rust-mode . eglot-ensure))
+  :custom (rust-format-on-save t)
+  :hook (rust-mode . (lambda () (message "Rust mode hook"))))
+;; (rust-mode
+;;  .
+;;  (lambda ()
+;;    (eglot-ensure)
+;;    (add-hook 'before-save-hook #'eglot-format))))
 
 ;;;-----------------------------------------------------------------------------------
 ;;; Dev/Languages/C++
