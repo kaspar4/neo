@@ -7,6 +7,20 @@ emacs_versions:
       - '--with-native-compilation=aot'
       - '--with-rsvg'
 
+emacs_versions:
+  - version: 29.3
+    source: git
+    config:
+      - '--with-native-compilation=aot'
+      - '--with-rsvg'
+      - '--with-tree-sitter'
+      - '--with-x-toolkit=gtk3'
+      - '--with-gif'
+      - '--with-png'
+      - '--with-jpeg'
+      - '--with-rsvg'
+      - '--with-tiff'
+
   # - version: 29.0.91
   #   source: git
   #   config:
